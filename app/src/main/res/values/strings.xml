@@ -1,3 +1,45 @@
 <resources>
     <string name="app_name">MEDLY_PROYECTO</string>
+    <string name="default_web_client_id">225243119487-1npr6j7cnt5g38pjc2i9d2rv6vnjkgog.apps.googleusercontent.com</string>
+    <string name="fondo_desc">Fondo</string>
+    <string name="bienvenido_a">¡Bienvenido a</string>
+    <string name="logo_medly_desc">Logo Medly</string>
+    <string name="slogan">Tu salud en tus manos!</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Contraseña</string>
+    <string name="ingresar">Ingresar</string>
+    <string name="registrar">Registrar</string>
+    <string name="o_inicia_sesion_con">O inicia sesión con</string>
+    <string name="continuar_con_google">Continuar con Google</string>
+    <string name="inicio">Inicio</string>
+    <string name="recetas">Recetas</string>
+    <string name="horas">Horas</string>
+    <string name="mapa">Mapa</string>
+    <string name="perfil">Perfil</string>
+    <string name="cerrar_sesion">Cerrar Sesión</string>
+
+    <string name="paso_formato">Paso %1$d de 3</string>
+    <string name="nombres">Nombres</string>
+    <string name="apellidos">Apellidos</string>
+    <string name="edad">Edad</string>
+    <string name="ciudad">Ciudad</string>
+    <string name="sexo">Sexo</string>
+    <string name="peso_kg">Peso (kg)</string>
+    <string name="estatura_cm">Estatura (cm)</string>
+    <string name="fecha_nacimiento">Fecha de nacimiento</string>
+    <string name="pregunta_cronica">¿Tienes alguna enfermedad crónica?</string>
+    <string name="especifique">Especifique cuál</string>
+    <string name="volver">VOLVER</string>
+    <string name="siguiente">SIGUIENTE</string>
+    <string name="finalizar">FINALIZAR</string>
+    <string name="error_paso_1">Completa todos los campos del paso 1</string>
+    <string name="error_paso_2">Completa todos los campos del paso 2</string>
+    <string name="error_paso_3">Por favor especifica tu enfermedad</string>
+
+    <string name="ingresar_caps">INGRESAR</string>
+    <string name="registrar_caps">REGISTRAR</string>
+    <string name="bienvenido">Bienvenido</string>
+    <string name="crear_cuenta">Crear Cuenta</string>
+    <string name="confirm_password_hint">Confirmar Contraseña</string>
+    <string name="o_continua_con">O continúa con</string>
 </resources>

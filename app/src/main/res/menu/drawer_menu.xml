@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@mipmap/house"
+            android:title="@string/inicio" />
+        <item
+            android:id="@+id/nav_recetas"
+            android:icon="@mipmap/archivo"
+            android:title="@string/recetas" />
+        <item
+            android:id="@+id/nav_horas"
+            android:icon="@mipmap/watch"
+            android:title="@string/horas" />
+        <item
+            android:id="@+id/nav_mapas"
+            android:icon="@mipmap/maps"
+            android:title="@string/mapa" />
+        <item
+            android:id="@+id/nav_perfil"
+            android:icon="@mipmap/monito"
+            android:title="@string/perfil" />
+    </group>
+
+    <item android:title="Opciones">
+        <menu>
+            <item
+                android:id="@+id/nav_logout"
+                android:icon="@android:drawable/ic_lock_power_off"
+                android:title="@string/cerrar_sesion" />
+        </menu>
+    </item>
+</menu>

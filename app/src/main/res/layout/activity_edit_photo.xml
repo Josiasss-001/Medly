@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".ui.editPhotoActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:text="Editar Fotos"
+            android:textColor="@color/black"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textAlignment="center" />
+
+        <!-- Cambiar Foto de Fondo -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Foto de fondo (Portada)"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp"/>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:layout_marginBottom="24dp">
+
+            <ImageView
+                android:id="@+id/editHeaderBackground"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:src="@mipmap/si"
+                android:contentDescription="Fondo de cabecera" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/changeBackgroundButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="8dp"
+                android:src="@android:drawable/ic_menu_camera"
+                app:fabSize="mini"
+                app:backgroundTint="@color/white"
+                app:tint="@color/Celeste"
+                android:contentDescription="Cambiar fondo" />
+        </FrameLayout>
+
+        <!-- Cambiar Foto de Perfil -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Foto de perfil"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp"/>
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/editProfileImage"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:src="@mipmap/monito"
+                app:shapeAppearanceOverlay="@style/CircleImage"
+                app:strokeColor="@color/Celeste"
+                app:strokeWidth="2dp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/changePhotoButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:src="@android:drawable/ic_menu_camera"
+                app:fabSize="mini"
+                app:backgroundTint="@color/white"
+                app:tint="@color/Celeste"
+                android:contentDescription="Cambiar foto de perfil" />
+        </FrameLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/savePhotosButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="GUARDAR FOTOS"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/Celeste"
+            app:cornerRadius="30dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/cancelPhotosButton"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="VOLVER"
+            android:textColor="#FF5252" />
+
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

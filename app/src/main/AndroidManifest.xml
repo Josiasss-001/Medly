@@ -11,15 +11,36 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MEDLY_PROYECTO">
+
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.AuthActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.EditProfileActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.HomeActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.perfilActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.editPhotoActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.RecolectorActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

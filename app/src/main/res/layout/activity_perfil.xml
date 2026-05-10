@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.perfilActivity">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white">
+
+        <!-- Barra Superior -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/topBar"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:paddingTop="40dp"
+            android:background="@color/white"
+            android:elevation="4dp"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageView
+                android:id="@+id/menuIcon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginStart="16dp"
+                android:src="@android:drawable/ic_menu_sort_by_size"
+                android:contentDescription="Menu"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/Celeste" />
+
+            <ImageView
+                android:id="@+id/logoMedly"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:contentDescription="Medly Logo"
+                android:src="@mipmap/medly"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/settingsIcon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="16dp"
+                android:src="@android:drawable/ic_menu_preferences"
+                android:contentDescription="Settings"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="@color/Celeste" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
+            app:layout_constraintTop_toBottomOf="@+id/topBar">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Fondo de perfil -->
+                <ImageView
+                    android:id="@+id/headerBackground"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp"
+                    android:scaleType="centerCrop"
+                    android:src="@mipmap/si"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:contentDescription="Header Background" />
+
+                <!-- Foto de perfil -->
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/profileImage"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_marginStart="24dp"
+                    android:padding="2dp"
+                    android:src="@mipmap/monito"
+                    app:layout_constraintBottom_toBottomOf="@+id/headerBackground"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/headerBackground"
+                    app:shapeAppearanceOverlay="@style/CircleImage"
+                    app:strokeColor="@color/white"
+                    app:strokeWidth="4dp" />
+
+                <TextView
+                    android:id="@+id/userNameText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="24dp"
+                    android:text="Nombre de Usuario"
+                    android:textColor="@color/black"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/profileImage"
+                    app:layout_constraintTop_toBottomOf="@+id/headerBackground" />
+
+                <TextView
+                    android:id="@+id/userEmailText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="correo@ejemplo.com"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    app:layout_constraintEnd_toEndOf="@+id/userNameText"
+                    app:layout_constraintStart_toStartOf="@+id/userNameText"
+                    app:layout_constraintTop_toBottomOf="@+id/userNameText" />
+
+                <!-- Botones Perfil - Manteniendo marginTop de 60dp -->
+                <LinearLayout
+                    android:id="@+id/horizontalButtonsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="60dp"
+                    android:orientation="horizontal"
+                    android:weightSum="4"
+                    app:layout_constraintTop_toBottomOf="@+id/profileImage">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/editProfileButton"
+                            android:layout_width="60dp"
+                            android:layout_height="60dp"
+                            app:cardBackgroundColor="@color/white"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="6dp"
+                            app:strokeWidth="0dp">
+
+                            <ImageView
+                                android:id="@+id/btnDatos"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:contentDescription="Edit Profile"
+                                android:padding="16dp"
+                                android:src="@android:drawable/ic_menu_edit"
+                                app:tint="@color/Celeste" />
+                        </com.google.android.material.card.MaterialCardView>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="DATOS"
+                            android:textColor="@color/black"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/editPhotosButton"
+                            android:layout_width="60dp"
+                            android:layout_height="60dp"
+                            app:cardBackgroundColor="@color/white"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="6dp"
+                            app:strokeWidth="0dp">
+                            <ImageView
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:padding="16dp"
+                                android:src="@android:drawable/ic_menu_camera"
+                                app:tint="@color/Celeste"
+                                android:contentDescription="Edit Photos" />
+                        </com.google.android.material.card.MaterialCardView>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="FOTOS"
+                            android:textColor="@color/black"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/btnPassword"
+                            android:layout_width="60dp"
+                            android:layout_height="60dp"
+                            app:cardBackgroundColor="@color/white"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="6dp"
+                            app:strokeWidth="0dp">
+                            <ImageView
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:padding="16dp"
+                                android:src="@android:drawable/ic_lock_idle_lock"
+                                app:tint="@color/Celeste"
+                                android:contentDescription="Change Password" />
+                        </com.google.android.material.card.MaterialCardView>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="CLAVE"
+                            android:textColor="@color/black"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/btnHistorial"
+                            android:layout_width="60dp"
+                            android:layout_height="60dp"
+                            app:cardBackgroundColor="@color/white"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="6dp"
+                            app:strokeWidth="0dp">
+                            <ImageView
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:padding="16dp"
+                                android:src="@android:drawable/ic_menu_recent_history"
+                                app:tint="@color/Celeste"
+                                android:contentDescription="History" />
+                        </com.google.android.material.card.MaterialCardView>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="HIST."
+                            android:textColor="@color/black"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/logoutButton"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:layout_margin="24dp"
+                    android:text="CERRAR SESIÓN"
+                    android:textColor="#FF5252"
+                    app:cornerRadius="30dp"
+                    app:layout_constraintTop_toBottomOf="@+id/horizontalButtonsContainer"
+                    app:strokeColor="#FF5252" />
+
+                <TextView
+                    android:id="@+id/deleteAccountText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="¿Desea eliminar la cuenta?"
+                    android:textColor="#808080"
+                    android:textSize="14sp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/logoutButton" />
+
+                <!-- Fecha de registro movida al final -->
+                <TextView
+                    android:id="@+id/userRegistrationDateText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="32dp"
+                    android:layout_marginBottom="32dp"
+                    android:text="Miembro desde: --/--/----"
+                    android:textColor="#808080"
+                    android:textSize="12sp"
+                    android:textStyle="italic"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/deleteAccountText" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </ScrollView>
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNavigation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            app:itemIconTint="@null"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:menu="@menu/bottom_nav_menu" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navigationView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@color/white"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/drawer_menu" />
+
+</androidx.drawerlayout.widget.DrawerLayout>
