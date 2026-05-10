@@ -1,0 +1,113 @@
+{
+  "project_info": {
+    "project_number": "225243119487",
+    "project_id": "medly-20dd7",
+    "storage_bucket": "medly-20dd7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:225243119487:android:0821d84f8af4b018ace44a",
+        "android_client_info": {
+          "package_name": "com.com.example.proyecto_salud"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "225243119487-1npr6j7cnt5g38pjc2i9d2rv6vnjkgog.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkd6nLMYZ8bZMS8JERZa6E63L4EPk2gM4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "225243119487-1npr6j7cnt5g38pjc2i9d2rv6vnjkgog.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:225243119487:android:d3bceb28187f5197ace44a",
+        "android_client_info": {
+          "package_name": "com.example.medly_proyecto"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "225243119487-kermgl5m5hn3crn239sk4dvrn8stpu5a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.medly_proyecto",
+            "certificate_hash": "d0a0be60c0cc04286312ff166a613c4481791ec2"
+          }
+        },
+        {
+          "client_id": "225243119487-1npr6j7cnt5g38pjc2i9d2rv6vnjkgog.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkd6nLMYZ8bZMS8JERZa6E63L4EPk2gM4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "225243119487-1npr6j7cnt5g38pjc2i9d2rv6vnjkgog.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:225243119487:android:493c86bb029223ddace44a",
+        "android_client_info": {
+          "package_name": "com.example.proyecto_salud"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "225243119487-nac2m87facer9vj0ppu1bssdh608dusf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.proyecto_salud",
+            "certificate_hash": "d0a0be60c0cc04286312ff166a613c4481791ec2"
+          }
+        },
+        {
+          "client_id": "225243119487-1npr6j7cnt5g38pjc2i9d2rv6vnjkgog.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkd6nLMYZ8bZMS8JERZa6E63L4EPk2gM4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "225243119487-1npr6j7cnt5g38pjc2i9d2rv6vnjkgog.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

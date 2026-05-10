@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@mipmap/house"
+        android:title="@string/inicio" />
+    <item
+        android:id="@+id/nav_recetas"
+        android:icon="@mipmap/iconito"
+        android:title="@string/recetas" />
+    <item
+        android:id="@+id/nav_horas"
+        android:icon="@mipmap/watch"
+        android:title="@string/horas" />
+    <item
+        android:id="@+id/nav_mapas"
+        android:icon="@mipmap/maps"
+        android:title="@string/mapa" />
+    <item
+        android:id="@+id/nav_perfil"
+        android:icon="@mipmap/monito"
+        android:title="@string/perfil" />
+</menu>
