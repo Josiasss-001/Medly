@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageButton
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.Toast
@@ -35,6 +36,7 @@ class EditProfileActivity : AppCompatActivity() {
     
     private lateinit var saveChangesButton: MaterialButton
     private lateinit var cancelButton: MaterialButton
+    private lateinit var backButton: ImageButton
 
     private val viewModel: EditProfileViewModel by viewModels()
     private val auth = FirebaseAuth.getInstance()
@@ -62,6 +64,7 @@ class EditProfileActivity : AppCompatActivity() {
         
         saveChangesButton = findViewById(R.id.saveChangesButton)
         cancelButton = findViewById(R.id.cancelButton)
+        backButton = findViewById(R.id.backButton)
 
         observarViewModel()
         
@@ -76,6 +79,11 @@ class EditProfileActivity : AppCompatActivity() {
 
         cancelButton.setOnClickListener {
             finish()
+        }
+
+        // Lógica del botón de retroceso
+        backButton.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
         }
     }
 

@@ -46,6 +46,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
+    implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
@@ -57,10 +58,19 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
 
+    // Cloudinary
+    implementation(libs.cloudinary.android)
+
     // Retrofit & Gson
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.gson)
+
+    // PDF Generation
+    implementation(libs.itext7.core)
+
+    // QR Generation
+    implementation(libs.zxing.core)
 
     // Play Services for Google Sign In
     implementation("com.google.android.gms:play-services-auth:21.3.0")

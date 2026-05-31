@@ -5,7 +5,10 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
+import android.view.View
+import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,15 +21,17 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.firebase.auth.FirebaseAuth
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
 
 class editPhotoActivity : AppCompatActivity() {
 
     private lateinit var editHeaderBackground: ImageView
-    private lateinit var changeBackgroundButton: FloatingActionButton
+    private lateinit var changeBackgroundButton: MaterialButton
     private lateinit var editProfileImage: ShapeableImageView
     private lateinit var changePhotoButton: FloatingActionButton
     private lateinit var savePhotosButton: MaterialButton
     private lateinit var cancelPhotosButton: MaterialButton
+    private lateinit var backButton: ImageButton
 
     private val viewModel: EditPhotoViewModel by viewModels()
     private val auth = FirebaseAuth.getInstance()
@@ -59,6 +64,7 @@ class editPhotoActivity : AppCompatActivity() {
         changePhotoButton = findViewById(R.id.changePhotoButton)
         savePhotosButton = findViewById(R.id.savePhotosButton)
         cancelPhotosButton = findViewById(R.id.cancelPhotosButton)
+        backButton = findViewById(R.id.backButton)
 
         cargarFotosActuales()
         observarViewModel()
@@ -85,6 +91,10 @@ class editPhotoActivity : AppCompatActivity() {
         cancelPhotosButton.setOnClickListener {
             finish()
         }
+
+        backButton.setOnClickListener {
+            finish()
+        }
     }
 
     private fun observarViewModel() {
@@ -100,7 +110,7 @@ class editPhotoActivity : AppCompatActivity() {
 
     private fun uriToBase64(uri: Uri): String? {
         return try {
-            val inputStream = contentResolver.openInputStream(uri)
+            val inputStream: InputStream? = contentResolver.openInputStream(uri)
             val bitmap = BitmapFactory.decodeStream(inputStream)
             val outputStream = ByteArrayOutputStream()
             // Comprimimos para no exceder el límite de Firestore (1MB por documento)
@@ -115,7 +125,6 @@ class editPhotoActivity : AppCompatActivity() {
     private fun cargarFotosActuales() {
         val userId = auth.currentUser?.uid ?: return
         val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-        // Cargamos desde la colección correcta
         db.collection("perfil_imagenes").document(userId).get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {

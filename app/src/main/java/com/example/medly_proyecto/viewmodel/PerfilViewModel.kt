@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.medly_proyecto.model.DatosMedicos
+import com.example.medly_proyecto.model.PerfilImagenes
 import com.example.medly_proyecto.model.Usuario
 import com.example.medly_proyecto.repository.UsuarioRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -18,6 +19,9 @@ class PerfilViewModel : ViewModel() {
     private val _datosMedicos = MutableLiveData<DatosMedicos?>()
     val datosMedicos: LiveData<DatosMedicos?> = _datosMedicos
 
+    private val _perfilImagenes = MutableLiveData<PerfilImagenes?>()
+    val perfilImagenes: LiveData<PerfilImagenes?> = _perfilImagenes
+
     private val _loggedOut = MutableLiveData<Boolean>()
     val loggedOut: LiveData<Boolean> = _loggedOut
 
@@ -31,6 +35,9 @@ class PerfilViewModel : ViewModel() {
         usuarioRepository.getDatosMedicos(userId) { medicalData ->
             _datosMedicos.value = medicalData
         }
+        usuarioRepository.getPerfilImagenes(userId) { imagenes ->
+            _perfilImagenes.value = imagenes
+        }
     }
 
     fun signOut() {
@@ -38,9 +45,10 @@ class PerfilViewModel : ViewModel() {
         _loggedOut.value = true
     }
 
-    fun eliminarCuenta() {
+    fun eliminarCuenta(callback: (Boolean, String?) -> Unit) {
         usuarioRepository.eliminarCuenta { success, error ->
             _deleteStatus.value = Pair(success, error)
+            callback(success, error)
         }
     }
 }

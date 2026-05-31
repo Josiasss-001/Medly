@@ -5,6 +5,7 @@ import com.example.medly_proyecto.model.PerfilImagenes
 import com.example.medly_proyecto.model.Usuario
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 
 class UsuarioRepository {
     private val db = FirebaseFirestore.getInstance()
@@ -22,6 +23,12 @@ class UsuarioRepository {
 
     fun actualizarCamposUsuario(uid: String, updates: Map<String, Any>, callback: (Boolean) -> Unit) {
         db.collection("usuarios").document(uid).update(updates)
+            .addOnSuccessListener { callback(true) }
+            .addOnFailureListener { callback(false) }
+    }
+
+    fun actualizarPerfilImagenes(uid: String, updates: Map<String, Any>, callback: (Boolean) -> Unit) {
+        db.collection("perfil_imagenes").document(uid).set(updates, SetOptions.merge())
             .addOnSuccessListener { callback(true) }
             .addOnFailureListener { callback(false) }
     }

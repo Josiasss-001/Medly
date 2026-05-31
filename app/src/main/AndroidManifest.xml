@@ -2,6 +2,22 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <uses-feature android:name="android.hardware.camera" android:required="true" />
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/pdf" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -21,25 +37,27 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".ui.EditProfileActivity"
-            android:exported="false" />
+        <activity android:name=".ui.EditProfileActivity" android:exported="false" />
+        <activity android:name=".ui.HomeActivity" android:exported="false" />
+        <activity android:name=".ui.perfilActivity" android:exported="false" />
+        <activity android:name=".ui.editPhotoActivity" android:exported="false" />
+        <activity android:name=".ui.RecolectorActivity" android:exported="false" />
+        <activity android:name=".ui.RecetasMedicasActivity" android:exported="false" />
+        <activity android:name=".ui.HorasActivity" android:exported="false" />
+        <activity android:name=".ui.CitaDetalleActivity" android:exported="false" />
+        <activity android:name=".ui.RecetaDetalleActivity" android:exported="false" />
+        <activity android:name=".ui.CalendarioTratamientoActivity" android:exported="false" />
+        <activity android:name=".ui.CredencialQRActivity" android:exported="false" />
 
-        <activity
-            android:name=".ui.HomeActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ui.perfilActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ui.editPhotoActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ui.RecolectorActivity"
-            android:exported="false" />
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

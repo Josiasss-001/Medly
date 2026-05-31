@@ -5,5 +5,10 @@ data class ChatResponse(
 )
 
 data class Choice(
-    val message: Message
+    val message: ResponseMessage
+)
+
+data class ResponseMessage(
+    val role: String,
+    val content: String
 )
