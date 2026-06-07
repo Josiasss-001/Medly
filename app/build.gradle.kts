@@ -72,8 +72,19 @@ dependencies {
     // QR Generation
     implementation(libs.zxing.core)
 
-    // Play Services for Google Sign In
+    // MPAndroidChart
+    implementation(libs.mpandroidchart)
+
+    // Lottie
+    implementation(libs.lottie)
+
+    // Play Services
     implementation("com.google.android.gms:play-services-auth:21.3.0")
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    
+    // Google Places
+    implementation("com.google.android.libraries.places:places:4.1.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

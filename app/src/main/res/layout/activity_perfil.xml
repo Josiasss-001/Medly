@@ -13,26 +13,37 @@
         android:layout_height="match_parent"
         android:background="#F8F9FA">
 
-        <!-- BARRA SUPERIOR FIJA (UNIFICADA) -->
-        <include
-            android:id="@+id/includeTopBar"
-            layout="@layout/layout_top_bar" />
+        <!-- BOTÓN DE MENÚ HAMBURGUESA FLOTANTE -->
+        <ImageView
+            android:id="@+id/menuIcon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="50dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Menú"
+            android:elevation="15dp"
+            android:padding="4dp"
+            android:src="@android:drawable/ic_menu_sort_by_size"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/white" />
 
-        <!-- 2. CONTENIDO SCROLLEABLE -->
+        <!-- CONTENIDO SCROLLEABLE -->
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:fillViewport="true"
             android:scrollbars="none"
-            app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
-            app:layout_constraintTop_toBottomOf="@+id/includeTopBar">
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingBottom="40dp">
+                android:paddingBottom="140dp">
 
-                <!-- HEADER CON EFECTO DE FUSIÓN -->
+                <!-- HEADER -->
                 <ImageView
                     android:id="@+id/headerBackground"
                     android:layout_width="match_parent"
@@ -42,7 +53,6 @@
                     app:layout_constraintTop_toTopOf="parent"
                     android:contentDescription="Imagen de cabecera" />
 
-                <!-- Capa de gradiente para fundir con el fondo #F8F9FA -->
                 <View
                     android:id="@+id/headerOverlay"
                     android:layout_width="match_parent"
@@ -51,12 +61,12 @@
                     android:backgroundTint="#F8F9FA"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <!-- INFORMACIÓN DE PERFIL CENTRALIZADA -->
+                <!-- INFORMACIÓN DE PERFIL -->
                 <LinearLayout
                     android:id="@+id/profileInfoLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="80dp"
                     android:gravity="center"
                     android:orientation="vertical"
                     app:layout_constraintTop_toTopOf="parent">
@@ -66,7 +76,7 @@
                         android:layout_width="110dp"
                         android:layout_height="110dp"
                         android:padding="2dp"
-                        android:src="@mipmap/monito"
+                        android:src="@drawable/monito"
                         app:shapeAppearanceOverlay="@style/CircleImage"
                         app:strokeColor="@color/white"
                         app:strokeWidth="4dp"
@@ -97,7 +107,7 @@
                         android:textSize="13sp" />
                 </LinearLayout>
 
-                <!-- ACCIONES HORIZONTALES (4 Botones) -->
+                <!-- ACCIONES HORIZONTALES -->
                 <LinearLayout
                     android:id="@+id/actionsLayout"
                     android:layout_width="match_parent"
@@ -112,32 +122,34 @@
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/editProfileButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="85dp"
                         android:layout_weight="1"
                         android:layout_margin="4dp"
+                        app:cardBackgroundColor="@color/white"
                         app:cardCornerRadius="18dp"
                         app:cardElevation="3dp"
                         app:strokeWidth="0dp">
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:padding="12dp"
+                            android:layout_height="match_parent"
                             android:gravity="center"
+                            android:padding="4dp"
                             android:orientation="vertical">
                             <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
                                 android:src="@android:drawable/ic_menu_edit"
-                                app:tint="@color/Celeste"
-                                android:contentDescription="Editar Perfil" />
+                                app:tint="#5CACE2"
+                                android:contentDescription="Datos" />
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
+                                android:layout_marginTop="6dp"
                                 android:text="DATOS"
                                 android:textColor="@color/black"
-                                android:textSize="10sp"
-                                android:textStyle="bold" />
+                                android:textSize="9sp"
+                                android:textStyle="bold"
+                                android:textAlignment="center" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
@@ -145,64 +157,68 @@
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/editPhotosButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="85dp"
                         android:layout_weight="1"
                         android:layout_margin="4dp"
+                        app:cardBackgroundColor="@color/white"
                         app:cardCornerRadius="18dp"
                         app:cardElevation="3dp"
                         app:strokeWidth="0dp">
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:padding="12dp"
+                            android:layout_height="match_parent"
                             android:gravity="center"
+                            android:padding="4dp"
                             android:orientation="vertical">
                             <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
                                 android:src="@android:drawable/ic_menu_camera"
-                                app:tint="@color/Celeste"
-                                android:contentDescription="Editar Fotos" />
+                                app:tint="#5CACE2"
+                                android:contentDescription="Fotos" />
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
+                                android:layout_marginTop="6dp"
                                 android:text="FOTOS"
                                 android:textColor="@color/black"
-                                android:textSize="10sp"
-                                android:textStyle="bold" />
+                                android:textSize="9sp"
+                                android:textStyle="bold"
+                                android:textAlignment="center" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
-                    <!-- AJUSTES -->
+                    <!-- CLAVE -->
                     <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/settingsButton"
+                        android:id="@+id/changePasswordButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="85dp"
                         android:layout_weight="1"
                         android:layout_margin="4dp"
+                        app:cardBackgroundColor="@color/white"
                         app:cardCornerRadius="18dp"
                         app:cardElevation="3dp"
                         app:strokeWidth="0dp">
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:padding="12dp"
+                            android:layout_height="match_parent"
                             android:gravity="center"
+                            android:padding="4dp"
                             android:orientation="vertical">
                             <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:src="@android:drawable/ic_menu_preferences"
-                                app:tint="@color/Celeste"
-                                android:contentDescription="Ajustes" />
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:src="@android:drawable/ic_lock_lock"
+                                app:tint="#5CACE2"
+                                android:contentDescription="Contraseña" />
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="AJUSTES"
+                                android:layout_marginTop="6dp"
+                                android:text="CLAVE"
+                                android:textAlignment="center"
                                 android:textColor="@color/black"
-                                android:textSize="10sp"
+                                android:textSize="9sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
@@ -211,32 +227,34 @@
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/securityButton"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="85dp"
                         android:layout_weight="1"
                         android:layout_margin="4dp"
+                        app:cardBackgroundColor="@color/white"
                         app:cardCornerRadius="18dp"
                         app:cardElevation="3dp"
                         app:strokeWidth="0dp">
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:padding="12dp"
+                            android:layout_height="match_parent"
                             android:gravity="center"
+                            android:padding="4dp"
                             android:orientation="vertical">
                             <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
                                 android:src="@android:drawable/ic_lock_idle_lock"
-                                app:tint="@color/Celeste"
+                                app:tint="#5CACE2"
                                 android:contentDescription="Seguridad" />
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
+                                android:layout_marginTop="6dp"
                                 android:text="SEGURIDAD"
                                 android:textColor="@color/black"
-                                android:textSize="9sp"
-                                android:textStyle="bold" />
+                                android:textSize="8sp"
+                                android:textStyle="bold"
+                                android:textAlignment="center" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
@@ -264,7 +282,7 @@
                             android:layout_width="36dp"
                             android:layout_height="36dp"
                             android:src="@mipmap/qr"
-                            app:tint="@color/Celeste"
+                            app:tint="#5CACE2"
                             android:contentDescription="Icono QR" />
                         <LinearLayout
                             android:layout_width="0dp"
@@ -318,7 +336,7 @@
                             android:layout_width="36dp"
                             android:layout_height="36dp"
                             android:src="@android:drawable/ic_menu_save"
-                            app:tint="@color/Celeste"
+                            app:tint="#5CACE2"
                             android:contentDescription="Icono PDF" />
                         <LinearLayout
                             android:layout_width="0dp"
@@ -396,18 +414,110 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </ScrollView>
 
-        <!-- BARRA INFERIOR UNIFICADA -->
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottomNavigation"
+        <!-- NUEVA BARRA DE NAVEGACIÓN PERSONALIZADA -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/bottomNavCard"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/white"
-            app:itemIconTint="@color/bnv_tab_item_color"
-            app:itemTextColor="@color/bnv_tab_item_color"
+            android:layout_height="70dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="55dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="35dp"
+            app:cardElevation="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:strokeWidth="0dp"
+            tools:layout_editor_absoluteX="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:weightSum="5">
+
+                <ImageView
+                    android:id="@+id/btnHomeNav"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:contentDescription="Inicio"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:padding="2dp"
+                    android:src="@drawable/house" />
+
+                <ImageView
+                    android:id="@+id/btnRecetasNav"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:contentDescription="Recetas"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:padding="2dp"
+                    android:src="@drawable/archivo" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+
+                <ImageView
+                    android:id="@+id/btnMapasNav"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:contentDescription="Mapas"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:padding="2dp"
+                    android:src="@drawable/maps" />
+
+                <ImageView
+                    android:id="@+id/btnPerfilNav"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:contentDescription="Perfil"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:padding="2dp"
+                    android:src="@drawable/monito" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/scanContainer"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_marginBottom="55dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            app:cardBackgroundColor="@color/Celeste"
+            app:cardCornerRadius="37.5dp"
+            app:cardElevation="15dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:menu="@menu/bottom_nav_menu" />
+            app:strokeColor="@color/white"
+            app:strokeWidth="4dp">
+
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/lottieScan"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clickable="false"
+                android:padding="15dp"
+                app:lottie_autoPlay="true"
+                app:lottie_loop="true"
+                app:lottie_rawRes="@raw/qr" />
+        </com.google.android.material.card.MaterialCardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

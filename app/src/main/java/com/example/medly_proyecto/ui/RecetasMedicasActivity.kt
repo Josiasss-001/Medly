@@ -35,11 +35,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.medly_proyecto.R
 import com.example.medly_proyecto.ui.adapter.RecetasAdapter
 import com.example.medly_proyecto.viewmodel.RecetasViewModel
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
+import com.airbnb.lottie.LottieAnimationView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class RecetasMedicasActivity : AppCompatActivity() {
 
@@ -47,6 +48,7 @@ class RecetasMedicasActivity : AppCompatActivity() {
     private lateinit var drawerLayout: DrawerLayout
     private val auth = FirebaseAuth.getInstance()
     private var imageUri: Uri? = null
+    private var scanType: String = "" // "RECETA" o "HORA"
 
     private lateinit var rvRecetas: RecyclerView
     private lateinit var adapter: RecetasAdapter
@@ -73,11 +75,22 @@ class RecetasMedicasActivity : AppCompatActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            val intent = Intent(this, RecetaDetalleActivity::class.java).apply {
-                putExtra("RECIPE_IMAGE_URI", imageUri.toString())
-                putExtra("IS_NEW_RECIPE", true)
+            when (scanType) {
+                "RECETA" -> {
+                    val intent = Intent(this, RecetaDetalleActivity::class.java).apply {
+                        putExtra("RECIPE_IMAGE_URI", imageUri.toString())
+                        putExtra("IS_NEW_RECIPE", true)
+                    }
+                    startActivity(intent)
+                }
+                "HORA" -> {
+                    val intent = Intent(this, CitaDetalleActivity::class.java).apply {
+                        putExtra("APPOINTMENT_IMAGE_URI", imageUri.toString())
+                        putExtra("IS_NEW_APPOINTMENT", true)
+                    }
+                    startActivity(intent)
+                }
             }
-            startActivity(intent)
         }
     }
 
@@ -113,6 +126,7 @@ class RecetasMedicasActivity : AppCompatActivity() {
         menuIcon.setOnClickListener { drawerLayout.openDrawer(GravityCompat.START) }
 
         addRecipeFab.setOnClickListener {
+            scanType = "RECETA"
             checkCameraPermission()
         }
 
@@ -122,6 +136,31 @@ class RecetasMedicasActivity : AppCompatActivity() {
         observarViewModel()
         
         navHeaderEmail.text = auth.currentUser?.email ?: "usuario@ejemplo.com"
+
+        // Lottie Scan Button
+        findViewById<LottieAnimationView>(R.id.lottieScan).setOnClickListener {
+            mostrarBottomSheetEscaneo()
+        }
+    }
+
+    private fun mostrarBottomSheetEscaneo() {
+        val dialog = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.layout_bottom_sheet_scan, null)
+        
+        view.findViewById<View>(R.id.btnScanReceta).setOnClickListener {
+            scanType = "RECETA"
+            checkCameraPermission()
+            dialog.dismiss()
+        }
+        
+        view.findViewById<View>(R.id.btnScanHora).setOnClickListener {
+            scanType = "HORA"
+            checkCameraPermission()
+            dialog.dismiss()
+        }
+        
+        dialog.setContentView(view)
+        dialog.show()
     }
 
     override fun onStart() {
@@ -249,8 +288,9 @@ class RecetasMedicasActivity : AppCompatActivity() {
     }
 
     private fun openCamera() {
+        val title = if (scanType == "RECETA") "Nueva Receta" else "Cita Médica"
         val values = ContentValues().apply {
-            put(MediaStore.Images.Media.TITLE, "Nueva Receta")
+            put(MediaStore.Images.Media.TITLE, title)
         }
         imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
@@ -276,7 +316,7 @@ class RecetasMedicasActivity : AppCompatActivity() {
                 R.id.nav_home -> irAActivity("HomeActivity")
                 R.id.nav_recetas -> drawerLayout.closeDrawer(GravityCompat.START)
                 R.id.nav_horas -> irAActivity("HorasActivity")
-                R.id.nav_mapas -> irAActivity("mapaActivity")
+                R.id.nav_mapas -> irAActivity("MapaActivity")
                 R.id.nav_perfil -> irAActivity("perfilActivity")
                 R.id.nav_logout -> { auth.signOut(); startActivity(Intent(this, AuthActivity::class.java)); finish() }
             }
@@ -285,17 +325,20 @@ class RecetasMedicasActivity : AppCompatActivity() {
     }
 
     private fun configurarNavegacion() {
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        bottomNavigationView.selectedItemId = R.id.nav_recetas
-        bottomNavigationView.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> { irAActivity("HomeActivity"); true }
-                R.id.nav_recetas -> true
-                R.id.nav_horas -> { irAActivity("HorasActivity"); true }
-                R.id.nav_perfil -> { irAActivity("perfilActivity"); true }
-                R.id.nav_mapas -> { irAActivity("mapaActivity"); true }
-                else -> false
-            }
+        findViewById<View>(R.id.btnHomeNav).setOnClickListener {
+            irAActivity("HomeActivity")
+        }
+        
+        findViewById<View>(R.id.btnRecetasNav).setOnClickListener {
+            // Ya estamos en Recetas
+        }
+        
+        findViewById<View>(R.id.btnMapasNav).setOnClickListener {
+            irAActivity("MapaActivity")
+        }
+        
+        findViewById<View>(R.id.btnPerfilNav).setOnClickListener {
+            irAActivity("perfilActivity")
         }
     }
 }

@@ -8,7 +8,7 @@ import android.util.Base64
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.TextView
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,6 +32,7 @@ class editPhotoActivity : AppCompatActivity() {
     private lateinit var savePhotosButton: MaterialButton
     private lateinit var cancelPhotosButton: MaterialButton
     private lateinit var backButton: ImageButton
+    private lateinit var progressBar: ProgressBar
 
     private val viewModel: EditPhotoViewModel by viewModels()
     private val auth = FirebaseAuth.getInstance()
@@ -42,14 +43,14 @@ class editPhotoActivity : AppCompatActivity() {
     private val pickProfileImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             editProfileImage.setImageURI(it)
-            base64ProfileImage = uriToBase64(it)
+            base64ProfileImage = uriToBase64(it, 400) // Redimensionar para ahorrar espacio
         }
     }
 
     private val pickBackgroundImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             editHeaderBackground.setImageURI(it)
-            base64BackgroundImage = uriToBase64(it)
+            base64BackgroundImage = uriToBase64(it, 800) // Redimensionar para ahorrar espacio
         }
     }
 
@@ -58,6 +59,7 @@ class editPhotoActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_edit_photo)
 
+        // Inicialización de vistas
         editHeaderBackground = findViewById(R.id.editHeaderBackground)
         changeBackgroundButton = findViewById(R.id.changeBackgroundButton)
         editProfileImage = findViewById(R.id.editProfileImage)
@@ -65,6 +67,7 @@ class editPhotoActivity : AppCompatActivity() {
         savePhotosButton = findViewById(R.id.savePhotosButton)
         cancelPhotosButton = findViewById(R.id.cancelPhotosButton)
         backButton = findViewById(R.id.backButton)
+        progressBar = findViewById(R.id.progressBar)
 
         cargarFotosActuales()
         observarViewModel()
@@ -98,9 +101,16 @@ class editPhotoActivity : AppCompatActivity() {
     }
 
     private fun observarViewModel() {
+        viewModel.isLoading.observe(this) { loading ->
+            progressBar.visibility = if (loading) View.VISIBLE else View.GONE
+            savePhotosButton.isEnabled = !loading
+            cancelPhotosButton.isEnabled = !loading
+        }
+
         viewModel.updateStatus.observe(this) { success ->
             if (success) {
                 Toast.makeText(this, "Fotos actualizadas con éxito", Toast.LENGTH_SHORT).show()
+                // Volver a la pantalla anterior
                 finish()
             } else {
                 Toast.makeText(this, "Error al actualizar las fotos", Toast.LENGTH_SHORT).show()
@@ -108,13 +118,30 @@ class editPhotoActivity : AppCompatActivity() {
         }
     }
 
-    private fun uriToBase64(uri: Uri): String? {
+    private fun uriToBase64(uri: Uri, targetSize: Int): String? {
         return try {
             val inputStream: InputStream? = contentResolver.openInputStream(uri)
-            val bitmap = BitmapFactory.decodeStream(inputStream)
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            BitmapFactory.decodeStream(inputStream, null, options)
+            inputStream?.close()
+
+            // Calcular el factor de escala
+            var inSampleSize = 1
+            while ((options.outWidth / inSampleSize) > targetSize || (options.outHeight / inSampleSize) > targetSize) {
+                inSampleSize *= 2
+            }
+
+            val finalInputStream: InputStream? = contentResolver.openInputStream(uri)
+            val bitmapOptions = BitmapFactory.Options().apply {
+                this.inSampleSize = inSampleSize
+            }
+            val bitmap = BitmapFactory.decodeStream(finalInputStream, null, bitmapOptions)
+            finalInputStream?.close()
+
             val outputStream = ByteArrayOutputStream()
-            // Comprimimos para no exceder el límite de Firestore (1MB por documento)
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 40, outputStream)
+            bitmap?.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
             val bytes = outputStream.toByteArray()
             Base64.encodeToString(bytes, Base64.DEFAULT)
         } catch (e: Exception) {

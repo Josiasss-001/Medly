@@ -3,47 +3,50 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="2dp"
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginBottom="16dp"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="6dp"
     app:strokeWidth="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
-
-        <TextView
-            android:id="@+id/tvEventName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="Nombre del Tratamiento"
-            android:textColor="@color/black"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@+id/tvTimeRemaining"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        android:padding="18dp">
 
         <TextView
             android:id="@+id/tvEventTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Hoy, 9:00 AM"
-            android:textColor="#888888"
-            android:textSize="13sp"
+            android:text="08:00 AM"
+            android:textColor="#64748B"
+            android:textSize="12sp"
+            android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvEventName" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/tvTimeRemaining"
-            android:layout_width="wrap_content"
+            android:id="@+id/tvEventName"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="En 2 horas"
-            android:textColor="@color/Celeste"
-            android:textSize="14sp"
+            android:layout_marginTop="6dp"
+            android:layout_marginEnd="12dp"
+            android:text="NOMBRE DEL MEDICAMENTO"
+            android:textColor="#1E293B"
+            android:textSize="16sp"
             android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/cbDosisCompletada"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvEventTime" />
+
+        <CheckBox
+            android:id="@+id/cbDosisCompletada"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:button="@drawable/custom_checkbox_modern"
+            android:checked="false"
+            android:background="@null"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

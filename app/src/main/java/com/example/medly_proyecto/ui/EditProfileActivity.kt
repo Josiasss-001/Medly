@@ -35,7 +35,6 @@ class EditProfileActivity : AppCompatActivity() {
     private lateinit var editChronicDetailEditText: TextInputEditText
     
     private lateinit var saveChangesButton: MaterialButton
-    private lateinit var cancelButton: MaterialButton
     private lateinit var backButton: ImageButton
 
     private val viewModel: EditProfileViewModel by viewModels()
@@ -63,7 +62,6 @@ class EditProfileActivity : AppCompatActivity() {
         editChronicDetailEditText = findViewById(R.id.editChronicDetailEditText)
         
         saveChangesButton = findViewById(R.id.saveChangesButton)
-        cancelButton = findViewById(R.id.cancelButton)
         backButton = findViewById(R.id.backButton)
 
         observarViewModel()
@@ -75,10 +73,6 @@ class EditProfileActivity : AppCompatActivity() {
 
         saveChangesButton.setOnClickListener {
             guardarCambios()
-        }
-
-        cancelButton.setOnClickListener {
-            finish()
         }
 
         // Lógica del botón de retroceso

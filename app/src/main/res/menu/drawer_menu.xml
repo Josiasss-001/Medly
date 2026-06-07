@@ -3,11 +3,11 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_home"
-            android:icon="@mipmap/house"
+            android:icon="@drawable/house"
             android:title="@string/inicio" />
         <item
             android:id="@+id/nav_recetas"
-            android:icon="@mipmap/archivo"
+            android:icon="@drawable/archivo"
             android:title="@string/recetas" />
         <item
             android:id="@+id/nav_horas"
@@ -15,11 +15,11 @@
             android:title="@string/horas" />
         <item
             android:id="@+id/nav_mapas"
-            android:icon="@mipmap/maps"
+            android:icon="@drawable/maps"
             android:title="@string/mapa" />
         <item
             android:id="@+id/nav_perfil"
-            android:icon="@mipmap/monito"
+            android:icon="@drawable/monito"
             android:title="@string/perfil" />
     </group>
 

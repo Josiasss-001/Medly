@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MEDLY_PROYECTO</string>
+    <string name="app_name">Medly</string>
     <string name="default_web_client_id">225243119487-1npr6j7cnt5g38pjc2i9d2rv6vnjkgog.apps.googleusercontent.com</string>
     <string name="fondo_desc">Fondo</string>
     <string name="bienvenido_a">¡Bienvenido a</string>
@@ -17,6 +17,7 @@
     <string name="mapa">Mapa</string>
     <string name="perfil">Perfil</string>
     <string name="cerrar_sesion">Cerrar Sesión</string>
+    <string name="escanear">Escanear</string>
 
     <string name="paso_formato">Paso %1$d de 3</string>
     <string name="nombres">Nombres</string>

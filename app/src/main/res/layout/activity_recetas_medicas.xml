@@ -13,19 +13,29 @@
         android:layout_height="match_parent"
         android:background="#F8F9FA">
 
-        <!-- BARRA SUPERIOR FIJA (UNIFICADA) -->
-        <include
-            android:id="@+id/includeTopBar"
-            layout="@layout/layout_top_bar" />
+        <!-- BOTÓN DE MENÚ HAMBURGUESA -->
+        <ImageView
+            android:id="@+id/menuIcon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="45dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Menú"
+            android:padding="4dp"
+            android:src="@android:drawable/ic_menu_sort_by_size"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/Celeste" />
 
         <!-- Contenido principal -->
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
-            app:layout_constraintTop_toBottomOf="@+id/includeTopBar">
+            android:layout_marginTop="90dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
 
-            <!-- Título de sección -->
             <TextView
                 android:id="@+id/tvTituloRecetas"
                 android:layout_width="wrap_content"
@@ -39,7 +49,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <!-- Categorías (Chips) -->
             <HorizontalScrollView
                 android:id="@+id/categoriesScroll"
                 android:layout_width="match_parent"
@@ -103,9 +112,9 @@
                 android:layout_marginTop="16dp"
                 android:clipToPadding="false"
                 android:padding="20dp"
+                android:paddingBottom="140dp"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/categoriesScroll"
-                tools:listitem="@layout/item_receta" />
+                app:layout_constraintTop_toBottomOf="@id/categoriesScroll" />
 
             <ProgressBar
                 android:id="@+id/loadingRecetas"
@@ -135,25 +144,118 @@
             android:id="@+id/addRecipeFab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="24dp"
+            android:layout_marginEnd="24dp"
+            android:layout_marginBottom="130dp"
             android:src="@android:drawable/ic_input_add"
             app:backgroundTint="@color/Celeste"
-            app:layout_constraintBottom_toTopOf="@+id/bottomNavigation"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:tint="@color/white" />
 
-        <!-- NAVEGACIÓN INFERIOR UNIFICADA -->
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottomNavigation"
+        <!-- NUEVA BARRA DE NAVEGACIÓN PERSONALIZADA -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/bottomNavCard"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/white"
-            app:itemIconTint="@color/bnv_tab_item_color"
-            app:itemTextColor="@color/bnv_tab_item_color"
+            android:layout_height="70dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="55dp"
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="35dp"
+            app:cardElevation="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:strokeWidth="0dp"
+            tools:layout_editor_absoluteX="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:weightSum="5">
+
+                <ImageView
+                    android:id="@+id/btnHomeNav"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:contentDescription="Inicio"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:padding="2dp"
+                    android:src="@drawable/house" />
+
+                <ImageView
+                    android:id="@+id/btnRecetasNav"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:contentDescription="Recetas"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:padding="2dp"
+                    android:src="@drawable/archivo" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+
+                <ImageView
+                    android:id="@+id/btnMapasNav"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:contentDescription="Mapas"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:padding="2dp"
+                    android:src="@drawable/maps" />
+
+                <ImageView
+                    android:id="@+id/btnPerfilNav"
+                    android:layout_width="0dp"
+                    android:layout_height="32dp"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:contentDescription="Perfil"
+                    android:focusable="true"
+                    android:foreground="?attr/selectableItemBackgroundBorderless"
+                    android:padding="2dp"
+                    android:src="@drawable/monito" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/scanContainer"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_marginBottom="55dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            app:cardBackgroundColor="@color/Celeste"
+            app:cardCornerRadius="37.5dp"
+            app:cardElevation="15dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:menu="@menu/bottom_nav_menu" />
+            app:strokeColor="@color/white"
+            app:strokeWidth="4dp">
+
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/lottieScan"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clickable="false"
+                android:padding="15dp"
+                app:lottie_autoPlay="true"
+                app:lottie_loop="true"
+                app:lottie_rawRes="@raw/qr" />
+        </com.google.android.material.card.MaterialCardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

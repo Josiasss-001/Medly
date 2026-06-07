@@ -11,27 +11,29 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="100dp"
         android:background="@color/white"
         android:elevation="4dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
             android:id="@+id/backButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_marginStart="12dp"
+            android:layout_marginTop="50dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Atrás"
-            android:src="@android:drawable/ic_menu_revert"
+            android:src="@drawable/abc_ic_ab_back_material"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/Celeste" />
+            app:tint="#1E293B" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
             android:text="Personalizar Fotos"
             android:textColor="@color/black"
             android:textSize="18sp"
@@ -89,7 +91,6 @@
                         app:layout_constraintTop_toTopOf="parent"
                         app:shapeAppearanceOverlay="@style/RoundedImage" />
 
-                    <!-- Efecto de difuminado/fusión con el fondo -->
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="180dp"
@@ -146,7 +147,7 @@
                         android:layout_width="150dp"
                         android:layout_height="150dp"
                         android:padding="2dp"
-                        android:src="@mipmap/monito"
+                        android:src="@drawable/monito"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
@@ -186,38 +187,55 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottomContainer"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="120dp"
         android:background="@color/white"
         android:elevation="16dp"
         android:padding="20dp"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:layout_editor_absoluteX="0dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/savePhotosButton"
-            android:layout_width="0dp"
-            android:layout_height="56dp"
-            android:text="ACTUALIZAR GALERÍA"
-            android:textColor="@color/white"
-            android:textStyle="bold"
-            app:backgroundTint="@color/Celeste"
-            app:cornerRadius="16dp"
-            app:elevation="4dp"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="-5dp"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:layout_editor_absoluteX="20dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/cancelPhotosButton"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:text="VOLVER"
+                android:textColor="#FF5252"
+                app:cornerRadius="16dp"
+                app:strokeColor="#FF5252" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/savePhotosButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1.5"
+                android:text="ACTUALIZAR"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                app:backgroundTint="@color/Celeste"
+                app:cornerRadius="16dp"
+                app:elevation="4dp" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/cancelPhotosButton"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="8dp"
-            android:text="CANCELAR Y VOLVER"
-            android:textColor="#FF5252"
-            app:cornerRadius="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/savePhotosButton" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

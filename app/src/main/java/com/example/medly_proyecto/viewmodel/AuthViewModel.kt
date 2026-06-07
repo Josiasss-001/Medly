@@ -23,6 +23,9 @@ class AuthViewModel : ViewModel() {
     private val _userVerificationState = MutableLiveData<UserType>()
     val userVerificationState: LiveData<UserType> get() = _userVerificationState
 
+    private val _isLoadingRecuperar = MutableLiveData<Boolean>()
+    val isLoadingRecuperar: LiveData<Boolean> get() = _isLoadingRecuperar
+
     enum class UserType {
         EXISTING, INCOMPLETE, NEW, ERROR
     }
@@ -115,5 +118,21 @@ class AuthViewModel : ViewModel() {
             .addOnFailureListener {
                 _userVerificationState.value = UserType.ERROR
             }
+    }
+
+    fun recuperarContrasena(email: String) {
+        if (email.isEmpty()) {
+            _authState.value = Pair(false, "Ingresa tu correo para recuperar la contraseña")
+            return
+        }
+        _isLoadingRecuperar.value = true
+        authRepository.enviarCorreoRecuperacion(email) { success, error ->
+            _isLoadingRecuperar.value = false
+            if (success) {
+                _authState.value = Pair(true, "Se ha enviado un correo para restablecer tu contraseña")
+            } else {
+                _authState.value = Pair(false, error ?: "Error al enviar el correo")
+            }
+        }
     }
 }

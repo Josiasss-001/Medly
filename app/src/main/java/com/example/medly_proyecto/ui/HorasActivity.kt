@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Base64
 import android.view.View
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -37,6 +38,8 @@ import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.util.*
+import com.airbnb.lottie.LottieAnimationView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class HorasActivity : AppCompatActivity() {
 
@@ -44,6 +47,7 @@ class HorasActivity : AppCompatActivity() {
     private lateinit var drawerLayout: DrawerLayout
     private val auth = FirebaseAuth.getInstance()
     private var imageUri: Uri? = null
+    private var scanType: String = "" // "RECETA" o "HORA"
 
     private lateinit var rvCitas: RecyclerView
     private lateinit var adapter: CitasAdapter
@@ -70,11 +74,22 @@ class HorasActivity : AppCompatActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            val intent = Intent(this, CitaDetalleActivity::class.java).apply {
-                putExtra("APPOINTMENT_IMAGE_URI", imageUri.toString())
-                putExtra("IS_NEW_APPOINTMENT", true)
+            when (scanType) {
+                "RECETA" -> {
+                    val intent = Intent(this, RecetaDetalleActivity::class.java).apply {
+                        putExtra("RECIPE_IMAGE_URI", imageUri.toString())
+                        putExtra("IS_NEW_RECIPE", true)
+                    }
+                    startActivity(intent)
+                }
+                "HORA" -> {
+                    val intent = Intent(this, CitaDetalleActivity::class.java).apply {
+                        putExtra("APPOINTMENT_IMAGE_URI", imageUri.toString())
+                        putExtra("IS_NEW_APPOINTMENT", true)
+                    }
+                    startActivity(intent)
+                }
             }
-            startActivity(intent)
         }
     }
 
@@ -84,10 +99,10 @@ class HorasActivity : AppCompatActivity() {
         setContentView(R.layout.activity_horas)
 
         drawerLayout = findViewById(R.id.drawerLayout)
-        val includeTopBar = findViewById<View>(R.id.includeTopBar)
-        val menuIcon = includeTopBar.findViewById<ImageView>(R.id.menuIcon)
+        val menuIcon = findViewById<ImageView>(R.id.menuIcon)
         val navigationView = findViewById<NavigationView>(R.id.navigationView)
         val addCitaFab = findViewById<FloatingActionButton>(R.id.addCitaFab)
+        val btnBack = findViewById<ImageButton>(R.id.btnBack)
 
         val headerView = navigationView.getHeaderView(0)
         navHeaderName = headerView.findViewById(R.id.nav_header_name)
@@ -112,14 +127,43 @@ class HorasActivity : AppCompatActivity() {
 
         menuIcon.setOnClickListener { drawerLayout.openDrawer(GravityCompat.START) }
 
-        addCitaFab.setOnClickListener { checkCameraPermission() }
+        btnBack.setOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
+
+        addCitaFab.setOnClickListener {
+            scanType = "HORA"
+            checkCameraPermission()
+        }
 
         setupRecyclerView()
-        configurarNavegacion()
+
         configurarDrawer(navigationView)
         observarViewModel()
 
         navHeaderEmail.text = auth.currentUser?.email ?: ""
+
+
+    }
+
+    private fun mostrarBottomSheetEscaneo() {
+        val dialog = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.layout_bottom_sheet_scan, null)
+        
+        view.findViewById<View>(R.id.btnScanReceta).setOnClickListener {
+            scanType = "RECETA"
+            checkCameraPermission()
+            dialog.dismiss()
+        }
+        
+        view.findViewById<View>(R.id.btnScanHora).setOnClickListener {
+            scanType = "HORA"
+            checkCameraPermission()
+            dialog.dismiss()
+        }
+        
+        dialog.setContentView(view)
+        dialog.show()
     }
 
     override fun onStart() {
@@ -152,7 +196,8 @@ class HorasActivity : AppCompatActivity() {
     }
 
     private fun openCamera() {
-        val values = ContentValues().apply { put(MediaStore.Images.Media.TITLE, "Cita Médica") }
+        val title = if (scanType == "RECETA") "Nueva Receta" else "Cita Médica"
+        val values = ContentValues().apply { put(MediaStore.Images.Media.TITLE, title) }
         imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply { putExtra(MediaStore.EXTRA_OUTPUT, imageUri) }
         takePictureLauncher.launch(intent)
@@ -247,6 +292,7 @@ class HorasActivity : AppCompatActivity() {
                 R.id.nav_home -> irAActivity("HomeActivity")
                 R.id.nav_recetas -> irAActivity("RecetasMedicasActivity")
                 R.id.nav_horas -> drawerLayout.closeDrawer(GravityCompat.START)
+                R.id.nav_mapas -> irAActivity("MapaActivity")
                 R.id.nav_perfil -> irAActivity("perfilActivity")
                 R.id.nav_logout -> { auth.signOut(); startActivity(Intent(this, AuthActivity::class.java)); finish() }
             }
@@ -255,26 +301,14 @@ class HorasActivity : AppCompatActivity() {
         }
     }
 
-    private fun configurarNavegacion() {
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        bottomNavigationView.selectedItemId = R.id.nav_horas
-        bottomNavigationView.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> { irAActivity("HomeActivity"); true }
-                R.id.nav_recetas -> { irAActivity("RecetasMedicasActivity"); true }
-                R.id.nav_horas -> true
-                R.id.nav_perfil -> { irAActivity("perfilActivity"); true }
-                else -> false
-            }
-        }
-    }
+
 
     private fun irAActivity(className: String) {
         try {
             val intent = Intent(this, Class.forName("com.example.medly_proyecto.ui.$className"))
             val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
             startActivity(intent, options.toBundle())
-            finish()
+            // Quitamos el finish() para permitir volver atrás
         } catch (e: Exception) { Toast.makeText(this, "Pantalla en desarrollo", Toast.LENGTH_SHORT).show() }
     }
 }

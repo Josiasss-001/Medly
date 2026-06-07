@@ -1,8 +1,10 @@
 package com.example.medly_proyecto.ui
 
 import android.Manifest
+import android.app.ActivityOptions
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -13,6 +15,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
 import android.view.View
@@ -33,7 +36,6 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.example.medly_proyecto.R
 import com.example.medly_proyecto.util.ReporteMedicoManager
 import com.example.medly_proyecto.viewmodel.PerfilViewModel
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
@@ -41,6 +43,8 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.airbnb.lottie.LottieAnimationView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class perfilActivity : AppCompatActivity() {
 
@@ -52,7 +56,7 @@ class perfilActivity : AppCompatActivity() {
     private lateinit var logoutButton: MaterialButton
     private lateinit var btnDatos: View 
     private lateinit var btnFotos: View
-    private lateinit var btnAjustes: View
+    private lateinit var btnCambiarPass: View
     private lateinit var btnSeguridad: View
     private lateinit var btnGenerarQR: View
     private lateinit var btnGenerarInforme: View
@@ -70,7 +74,10 @@ class perfilActivity : AppCompatActivity() {
     private var downloadId: Long = -1
     private var ultimoNombreArchivo: String? = null
 
-    private val requestPermissionLauncher = registerForActivityResult(
+    private var imageUri: Uri? = null
+    private var scanType: String = "" // "RECETA" o "HORA"
+
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
@@ -80,14 +87,46 @@ class perfilActivity : AppCompatActivity() {
         }
     }
 
+    private val requestCameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            openCamera()
+        } else {
+            Toast.makeText(this, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private val takePictureLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            when (scanType) {
+                "RECETA" -> {
+                    val intent = Intent(this, RecetaDetalleActivity::class.java).apply {
+                        putExtra("RECIPE_IMAGE_URI", imageUri.toString())
+                        putExtra("IS_NEW_RECIPE", true)
+                    }
+                    startActivity(intent)
+                }
+                "HORA" -> {
+                    val intent = Intent(this, CitaDetalleActivity::class.java).apply {
+                        putExtra("APPOINTMENT_IMAGE_URI", imageUri.toString())
+                        putExtra("IS_NEW_APPOINTMENT", true)
+                    }
+                    startActivity(intent)
+                }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_perfil)
         
         drawerLayout = findViewById(R.id.drawerLayout)
-        val includeTopBar = findViewById<View>(R.id.includeTopBar)
-        val menuIcon = includeTopBar.findViewById<ImageView>(R.id.menuIcon)
+        val menuIcon = findViewById<ImageView>(R.id.menuIcon)
         val navigationView = findViewById<NavigationView>(R.id.navigationView)
 
         val headerView = navigationView.getHeaderView(0)
@@ -112,7 +151,7 @@ class perfilActivity : AppCompatActivity() {
         logoutButton = findViewById(R.id.logoutButton)
         btnDatos = findViewById(R.id.editProfileButton)
         btnFotos = findViewById(R.id.editPhotosButton)
-        btnAjustes = findViewById(R.id.settingsButton)
+        btnCambiarPass = findViewById(R.id.changePasswordButton)
         btnSeguridad = findViewById(R.id.securityButton)
         btnGenerarQR = findViewById(R.id.btnGenerarQR)
         btnGenerarInforme = findViewById(R.id.btnGenerarInforme)
@@ -129,15 +168,25 @@ class perfilActivity : AppCompatActivity() {
         configurarDrawer(navigationView)
 
         btnDatos.setOnClickListener {
-            startActivity(Intent(this, EditProfileActivity::class.java))
+            val intent = Intent(this, EditProfileActivity::class.java)
+            val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
+            startActivity(intent, options.toBundle())
         }
 
         btnFotos.setOnClickListener {
             irAActivity("editPhotoActivity")
         }
 
+        btnCambiarPass.setOnClickListener {
+            val intent = Intent(this, CambiarContrasenaActivity::class.java)
+            val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
+            startActivity(intent, options.toBundle())
+        }
+
         btnGenerarQR.setOnClickListener {
-            startActivity(Intent(this, CredencialQRActivity::class.java))
+            val intent = Intent(this, CredencialQRActivity::class.java)
+            val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
+            startActivity(intent, options.toBundle())
         }
 
         btnGenerarInforme.setOnClickListener {
@@ -152,7 +201,10 @@ class perfilActivity : AppCompatActivity() {
             mostrarDialogoEliminar()
         }
 
-        // Registro seguro del receptor
+        findViewById<LottieAnimationView>(R.id.lottieScan).setOnClickListener {
+            mostrarBottomSheetEscaneo()
+        }
+
         try {
             val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -165,6 +217,46 @@ class perfilActivity : AppCompatActivity() {
         }
     }
 
+    private fun mostrarBottomSheetEscaneo() {
+        val dialog = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.layout_bottom_sheet_scan, null)
+        
+        view.findViewById<View>(R.id.btnScanReceta).setOnClickListener {
+            scanType = "RECETA"
+            checkCameraPermission()
+            dialog.dismiss()
+        }
+        
+        view.findViewById<View>(R.id.btnScanHora).setOnClickListener {
+            scanType = "HORA"
+            checkCameraPermission()
+            dialog.dismiss()
+        }
+        
+        dialog.setContentView(view)
+        dialog.show()
+    }
+
+    private fun checkCameraPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            openCamera()
+        } else {
+            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    private fun openCamera() {
+        val title = if (scanType == "RECETA") "Nueva Receta" else "Cita Médica"
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.TITLE, title)
+        }
+        imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+            putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
+        }
+        takePictureLauncher.launch(intent)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         try {
@@ -175,7 +267,7 @@ class perfilActivity : AppCompatActivity() {
     private fun checkPermissionsAndGenerate() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             } else {
                 generarInforme()
             }
@@ -195,42 +287,11 @@ class perfilActivity : AppCompatActivity() {
 
         Toast.makeText(this, "Generando informe...", Toast.LENGTH_LONG).show()
 
-        ReporteMedicoManager.generarYSubirReporte(this, usuario, datos, object : ReporteMedicoManager.ReporteCallback {
-            override fun onSuccess(pdfUrl: String, qrBitmap: Bitmap?) {
-                runOnUiThread {
-                    iniciarDescarga(pdfUrl)
-                }
-            }
-
-            override fun onError(e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this@perfilActivity, "Error al generar: ${e.message}", Toast.LENGTH_LONG).show()
-                }
-            }
-        })
-    }
-
-    private fun iniciarDescarga(url: String) {
         try {
-            val secureUrl = if (url.startsWith("http://")) url.replace("http://", "https://") else url
-            // Usamos un nombre de archivo rastreable
-            ultimoNombreArchivo = "Informe_Medly_${System.currentTimeMillis()}.pdf"
-            
-            val request = DownloadManager.Request(Uri.parse(secureUrl))
-                .setTitle("Informe Médico Medly")
-                .setDescription("Documento Clínico Oficial")
-                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, ultimoNombreArchivo)
-                .setAllowedOverMetered(true)
-                .setAllowedOverRoaming(true)
-                .setMimeType("application/pdf")
-
-            val manager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            downloadId = manager.enqueue(request)
-            
-            Toast.makeText(this, "Descarga iniciada...", Toast.LENGTH_SHORT).show()
+            val pdfFile = ReporteMedicoManager.generarReporteLocal(this, usuario, datos)
+            lanzarIntentPdf(pdfFile)
         } catch (e: Exception) {
-            Toast.makeText(this, "Error al descargar: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Error al generar: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -251,7 +312,6 @@ class perfilActivity : AppCompatActivity() {
             if (file.exists()) {
                 lanzarIntentPdf(file)
             } else {
-                // Si el nombre directo falla, intentamos por el cursor del DownloadManager como respaldo
                 val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
                 val query = DownloadManager.Query().setFilterById(downloadId)
                 val cursor = downloadManager.query(query)
@@ -345,7 +405,8 @@ class perfilActivity : AppCompatActivity() {
     private fun irAAuth() {
         val intent = Intent(this, AuthActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
+        val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
+        startActivity(intent, options.toBundle())
         finish()
     }
 
@@ -355,6 +416,7 @@ class perfilActivity : AppCompatActivity() {
                 R.id.nav_home -> irAActivity("HomeActivity")
                 R.id.nav_recetas -> irAActivity("RecetasMedicasActivity")
                 R.id.nav_horas -> irAActivity("HorasActivity")
+                R.id.nav_mapas -> irAActivity("MapaActivity")
                 R.id.nav_perfil -> drawerLayout.closeDrawer(GravityCompat.START)
                 R.id.nav_logout -> viewModel.signOut()
             }
@@ -364,23 +426,28 @@ class perfilActivity : AppCompatActivity() {
     }
 
     private fun configurarNavegacion() {
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigation)
-        bottomNavigationView.selectedItemId = R.id.nav_perfil
-        bottomNavigationView.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.nav_home -> { irAActivity("HomeActivity"); true }
-                R.id.nav_recetas -> { irAActivity("RecetasMedicasActivity"); true }
-                R.id.nav_horas -> { irAActivity("HorasActivity"); true }
-                R.id.nav_perfil -> true
-                else -> false
-            }
+        findViewById<View>(R.id.btnHomeNav).setOnClickListener {
+            irAActivity("HomeActivity")
+        }
+        
+        findViewById<View>(R.id.btnRecetasNav).setOnClickListener {
+            irAActivity("RecetasMedicasActivity")
+        }
+        
+        findViewById<View>(R.id.btnMapasNav).setOnClickListener {
+            irAActivity("MapaActivity")
+        }
+        
+        findViewById<View>(R.id.btnPerfilNav).setOnClickListener {
+            // Ya estamos en Perfil
         }
     }
 
     private fun irAActivity(className: String) {
         try {
             val intent = Intent(this, Class.forName("com.example.medly_proyecto.ui.$className"))
-            startActivity(intent)
+            val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
+            startActivity(intent, options.toBundle())
             finish()
         } catch (e: Exception) { }
     }

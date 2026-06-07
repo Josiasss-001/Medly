@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.ActivityOptions
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -16,6 +17,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.medly_proyecto.R
+import com.example.medly_proyecto.databinding.DialogoRecuperarContrasenaBinding
 import com.example.medly_proyecto.viewmodel.AuthViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -34,6 +36,7 @@ class AuthActivity : AppCompatActivity() {
     private lateinit var llConfirmPasswordContainer: LinearLayout
     private lateinit var confirmPasswordEditText: EditText
     private lateinit var rlLoginOptions: RelativeLayout
+    private lateinit var tvForgotPassword: TextView
     private lateinit var btnAction: MaterialButton
     private lateinit var googleButton: MaterialButton
     private lateinit var tvHeaderTitle: TextView
@@ -64,13 +67,14 @@ class AuthActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_auth)
 
-        // Inicialización de vistas - Solo las que existen en el XML
+        // Inicialización de vistas
         authToggleGroup = findViewById(R.id.authToggleGroup)
         emailEditText = findViewById(R.id.emailEditText)
         passwordEditText = findViewById(R.id.passwordEditText)
         llConfirmPasswordContainer = findViewById(R.id.llConfirmPasswordContainer)
         confirmPasswordEditText = findViewById(R.id.confirmPasswordEditText)
         rlLoginOptions = findViewById(R.id.rlLoginOptions)
+        tvForgotPassword = findViewById(R.id.tvForgotPassword)
         btnAction = findViewById(R.id.btnAction)
         googleButton = findViewById(R.id.googleButton)
         tvHeaderTitle = findViewById(R.id.tvHeaderTitle)
@@ -129,15 +133,48 @@ class AuthActivity : AppCompatActivity() {
                 viewModel.validarEIniciarSesion(email, password)
             } else {
                 val confirmPass = confirmPasswordEditText.text.toString().trim()
-                // Registro simplificado: Solo correo y claves
                 viewModel.validarYRegistrar(email, password, confirmPass)
             }
         }
 
         googleButton.setOnClickListener {
-            val signInIntent = googleSignInClient.signInIntent
-            googleSignInLauncher.launch(signInIntent)
+            googleSignInClient.signOut().addOnCompleteListener {
+                val signInIntent = googleSignInClient.signInIntent
+                googleSignInLauncher.launch(signInIntent)
+            }
         }
+
+        tvForgotPassword.setOnClickListener {
+            mostrarDialogoRecuperacion()
+        }
+    }
+
+    private fun mostrarDialogoRecuperacion() {
+        val binding = DialogoRecuperarContrasenaBinding.inflate(LayoutInflater.from(this))
+        val constructor = AlertDialog.Builder(this)
+        constructor.setView(binding.root)
+        
+        val dialogo = constructor.create()
+        dialogo.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        // Pre-rellenar el email si el usuario ya escribió algo
+        binding.etEmailRecuperar.setText(emailEditText.text.toString().trim())
+
+        binding.btnEnviarRecuperar.setOnClickListener {
+            val email = binding.etEmailRecuperar.text.toString().trim()
+            if (email.isNotEmpty()) {
+                viewModel.recuperarContrasena(email)
+                dialogo.dismiss()
+            } else {
+                Toast.makeText(this, "Por favor, ingresa tu correo", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.btnCancelarRecuperar.setOnClickListener {
+            dialogo.dismiss()
+        }
+
+        dialogo.show()
     }
 
     private fun observarViewModel() {
@@ -146,6 +183,8 @@ class AuthActivity : AppCompatActivity() {
                 if (!isLoginMode && mensaje?.contains("exitoso") == true) {
                     Toast.makeText(this, mensaje, Toast.LENGTH_LONG).show()
                     authToggleGroup.check(R.id.btnSelectLogin)
+                } else if (mensaje?.contains("enviado") == true) {
+                    Toast.makeText(this, mensaje, Toast.LENGTH_LONG).show()
                 } else {
                     viewModel.verificarUsuario()
                 }

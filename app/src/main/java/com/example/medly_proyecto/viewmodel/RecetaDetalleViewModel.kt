@@ -17,6 +17,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.*
 
 data class RecipeResult(
     val nombreMedicamento: String = "",
@@ -53,19 +54,16 @@ class RecetaDetalleViewModel : ViewModel() {
             try {
                 val prompt = """
                     Analiza esta imagen de una receta médica y extrae la información en formato JSON estricto.
-                    NO extraigas ni incluyas el nombre del médico.
                     Debes incluir los siguientes campos:
                     - nombreMedicamento
-                    - dosis (ej: 500mg)
-                    - frecuencia (ej: cada 8 horas)
-                    - duracion (ej: 7 días)
-                    - cantidadTotal (la cantidad total que el paciente debe consumir, ej: 21 cápsulas)
-                    - cantidadEnvase (la cantidad que trae la caja o frasco, ej: 30 cápsulas)
-                    - vecesAlDia (ej: 3 veces al día)
-                    - instrucciones (indicaciones adicionales breves)
-                    - metodoUso (Genera un texto detallado y profesional en español que explique para qué sirve este medicamento y las instrucciones paso a paso de cómo consumirlo correctamente).
-                    
-                    Si no encuentras algún dato, deja el valor como "".
+                    - dosis
+                    - frecuencia
+                    - duracion
+                    - cantidadTotal
+                    - cantidadEnvase
+                    - vecesAlDia
+                    - instrucciones
+                    - metodoUso
                 """.trimIndent()
 
                 val request = ChatRequest(
@@ -93,11 +91,8 @@ class RecetaDetalleViewModel : ViewModel() {
                 if (jsonContent != null) {
                     val result = gson.fromJson(jsonContent, RecipeResult::class.java)
                     _recipeData.postValue(result)
-                } else {
-                    _error.postValue("No se pudo procesar la respuesta de la IA")
                 }
             } catch (e: Exception) {
-                Log.e("RecetaDetalleVM", "Error analizando receta", e)
                 _error.postValue("Error: ${e.message}")
             } finally {
                 _isLoading.postValue(false)
@@ -120,13 +115,14 @@ class RecetaDetalleViewModel : ViewModel() {
             vecesAlDia = dataToSave.vecesAlDia,
             instrucciones = dataToSave.instrucciones,
             metodoUso = dataToSave.metodoUso,
-            imagenUri = imageUri
+            imagenUri = imageUri,
+            fechaCaptura = System.currentTimeMillis()
         )
 
         _isLoading.value = true
-        recetasRepo.guardarRecetaEncriptada(receta) { success, message ->
+        recetasRepo.guardarRecetaEncriptada(receta) { success, docId ->
             _isLoading.postValue(false)
-            _saveStatus.postValue(Pair(success, message))
+            _saveStatus.postValue(Pair(success, docId))
         }
     }
 }

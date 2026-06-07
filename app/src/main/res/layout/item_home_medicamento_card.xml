@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginVertical="8dp"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="#FFE0B2"
+    app:cardBackgroundColor="#FFF8F1">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="20dp">
+
+        <FrameLayout
+            android:id="@+id/iconContainerMed"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
+            android:background="@drawable/calendar_month_pill_bg"
+            android:backgroundTint="#FFF3E0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+            <ImageView
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_gravity="center"
+                android:src="@drawable/pildora"
+                android:contentDescription="Icono de medicamento"
+                app:tint="#F57C00" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tvLabelMed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:text="Próximo medicamento"
+            android:textColor="#F57C00"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toEndOf="@id/iconContainerMed"
+            app:layout_constraintTop_toTopOf="@id/iconContainerMed" />
+
+        <TextView
+            android:id="@+id/tvNombreMed"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Cargando..."
+            android:textColor="#1E293B"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginEnd="8dp"
+            app:layout_constraintEnd_toStartOf="@id/tvBadgeEstado"
+            app:layout_constraintStart_toStartOf="@id/tvLabelMed"
+            app:layout_constraintTop_toBottomOf="@id/tvLabelMed" />
+
+        <TextView
+            android:id="@+id/tvHoraMed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--:-- hrs"
+            android:textColor="#F57C00"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@id/tvNombreMed"
+            app:layout_constraintTop_toBottomOf="@id/tvNombreMed" />
+
+        <TextView
+            android:id="@+id/tvBadgeEstado"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/badge_outline_orange"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="4dp"
+            android:text="Pendiente"
+            android:textColor="#F57C00"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Medicamentos tomados hoy"
+                    android:textColor="#64748B"
+                    android:textSize="12sp" />
+                <TextView
+                    android:id="@+id/tvProgresoTexto"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 / 0"
+                    android:textColor="#1E293B"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/progressMed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:trackColor="#E2E8F0"
+                app:indicatorColor="#009688"
+                app:trackThickness="8dp"
+                app:trackCornerRadius="4dp"
+                android:progress="0" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

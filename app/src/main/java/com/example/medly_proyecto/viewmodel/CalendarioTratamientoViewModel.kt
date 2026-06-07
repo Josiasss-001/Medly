@@ -4,136 +4,199 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.medly_proyecto.model.Receta
+import com.example.medly_proyecto.model.TomaMedicamento
 import com.example.medly_proyecto.repository.RecetasRepository
 import com.google.firebase.auth.FirebaseAuth
+import java.text.SimpleDateFormat
 import java.util.*
 
 data class EventoTratamiento(
-    val id: String = "",
+    val id: String = "", 
     val nombre: String = "",
     val hora: String = "",
-    val tiempoRestante: String = "",
-    val completado: Boolean = false
+    val completado: Boolean = false,
+    val idReceta: String = ""
 )
 
 class CalendarioTratamientoViewModel : ViewModel() {
-    private val repository = RecetasRepository()
+    private val repositorio = RecetasRepository()
     private val auth = FirebaseAuth.getInstance()
     
     private val _eventos = MutableLiveData<List<EventoTratamiento>>()
     val eventos: LiveData<List<EventoTratamiento>> = _eventos
 
     private var todasLasRecetas: List<Receta> = emptyList()
-    private var fechaSeleccionada: Calendar = Calendar.getInstance()
+    private var fechaActual: Calendar = Calendar.getInstance()
     private var recetaIdEspecifica: String? = null
+    private var estaCargando = false
 
     init {
-        cargarRecetas()
+        cargarRecetasBase()
     }
 
-    private fun cargarRecetas() {
+    private fun cargarRecetasBase() {
         val userId = auth.currentUser?.uid ?: return
-        repository.getRecetasDesencriptadas(userId) { recetas ->
+        repositorio.getRecetasDesencriptadas(userId) { recetas ->
             if (recetas != null) {
                 todasLasRecetas = recetas
-                filtrarEventosParaFecha(fechaSeleccionada)
+                if (_eventos.value == null) cargarTomasDelDia()
             }
         }
     }
 
     fun setRecetaIdEspecifica(id: String?) {
         recetaIdEspecifica = id
-        filtrarEventosParaFecha(fechaSeleccionada)
+        cargarTomasDelDia()
     }
 
-    fun seleccionarFecha(year: Int, month: Int, day: Int) {
-        fechaSeleccionada.set(year, month, day)
-        filtrarEventosParaFecha(fechaSeleccionada)
-    }
-
-    private fun filtrarEventosParaFecha(cal: Calendar) {
-        val nuevosEventos = mutableListOf<EventoTratamiento>()
-        
-        val recetasAProcesar = if (recetaIdEspecifica != null) {
-            todasLasRecetas.filter { it.id == recetaIdEspecifica }
-        } else {
-            todasLasRecetas
+    fun seleccionarFecha(anio: Int, mes: Int, dia: Int) {
+        val nuevaFecha = Calendar.getInstance().apply {
+            set(anio, mes, dia, 0, 0, 0)
+            set(Calendar.MILLISECOND, 0)
         }
-        
-        for (receta in recetasAProcesar) {
-            if (aplicaParaFecha(receta, cal)) {
-                val eventosDelDia = generarEventosParaReceta(receta)
-                nuevosEventos.addAll(eventosDelDia)
+        fechaActual = nuevaFecha
+        cargarTomasDelDia()
+    }
+
+    private fun cargarTomasDelDia() {
+        val userId = auth.currentUser?.uid ?: return
+        if (estaCargando) return
+        estaCargando = true
+
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val fechaString = sdf.format(fechaActual.time)
+
+        repositorio.getTomasPorFecha(userId, fechaString) { tomasExistentes ->
+            val tomas = tomasExistentes ?: emptyList()
+            
+            val recetasAProcesar = if (recetaIdEspecifica != null) {
+                todasLasRecetas.filter { it.id == recetaIdEspecifica }
+            } else {
+                todasLasRecetas
+            }
+
+            val idsRecetasConTomas = tomas.map { it.idReceta }.toSet()
+            
+            // SOLO buscamos recetas faltantes si es el día de HOY
+            val esHoy = esMismoDia(fechaActual, Calendar.getInstance())
+            
+            val recetasFaltantes = if (esHoy) {
+                recetasAProcesar.filter { receta ->
+                    applicaParaFecha(receta, fechaActual) && receta.id !in idsRecetasConTomas
+                }
+            } else {
+                emptyList()
+            }
+
+            if (recetasFaltantes.isNotEmpty()) {
+                val nuevasTomas = mutableListOf<TomaMedicamento>()
+                recetasFaltantes.forEach { receta ->
+                    nuevasTomas.addAll(generarTomasDeUnDia(receta, fechaString))
+                }
+                
+                repositorio.guardarTomasMasivas(nuevasTomas) { exito ->
+                    estaCargando = false
+                    if (exito) cargarTomasDelDia()
+                }
+            } else {
+                val eventosMapeados = tomas
+                    .filter { recetaIdEspecifica == null || it.idReceta == recetaIdEspecifica }
+                    .map { toma ->
+                        EventoTratamiento(
+                            id = toma.id,
+                            nombre = toma.nombreMedicamento,
+                            hora = toma.horaProgramada,
+                            completado = toma.estado == "TOMADA",
+                            idReceta = toma.idReceta
+                        )
+                    }.sortedBy { it.hora }
+                
+                _eventos.postValue(eventosMapeados)
+                estaCargando = false
             }
         }
-        
-        _eventos.postValue(nuevosEventos.sortedBy { it.hora })
     }
 
-    private fun aplicaParaFecha(receta: Receta, cal: Calendar): Boolean {
-        val fechaInicio = Calendar.getInstance().apply { timeInMillis = receta.fechaCaptura }
-        val inicio = fechaInicio.clone() as Calendar
-        inicio.set(Calendar.HOUR_OF_DAY, 0)
-        inicio.set(Calendar.MINUTE, 0)
-        inicio.set(Calendar.SECOND, 0)
-        inicio.set(Calendar.MILLISECOND, 0)
-        
+    private fun esMismoDia(cal1: Calendar, cal2: Calendar): Boolean {
+        return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+               cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
+    }
+
+    private fun applicaParaFecha(receta: Receta, cal: Calendar): Boolean {
+        val inicio = Calendar.getInstance().apply { 
+            timeInMillis = receta.fechaCaptura
+            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+        }
         val actual = cal.clone() as Calendar
-        actual.set(Calendar.HOUR_OF_DAY, 0)
-        actual.set(Calendar.MINUTE, 0)
-        actual.set(Calendar.SECOND, 0)
-        actual.set(Calendar.MILLISECOND, 0)
+        actual.set(Calendar.HOUR_OF_DAY, 0); actual.set(Calendar.MINUTE, 0); actual.set(Calendar.SECOND, 0); actual.set(Calendar.MILLISECOND, 0)
 
         if (actual.before(inicio)) return false
 
-        val duracionDias = try {
-            receta.duracion.filter { it.isDigit() }.toInt()
-        } catch (e: Exception) {
-            30
-        }
+        val duracionDias = try { 
+            receta.duracion.filter { it.isDigit() }.toInt().takeIf { it > 0 } ?: 7 
+        } catch (e: Exception) { 7 }
+        
+        val fin = inicio.clone() as Calendar
+        fin.add(Calendar.DAY_OF_YEAR, duracionDias)
 
-        val fechaFin = inicio.clone() as Calendar
-        fechaFin.add(Calendar.DAY_OF_YEAR, duracionDias)
-
-        return actual.before(fechaFin) || actual == fechaFin
+        return actual.before(fin) || (actual.get(Calendar.YEAR) == fin.get(Calendar.YEAR) && actual.get(Calendar.DAY_OF_YEAR) == fin.get(Calendar.DAY_OF_YEAR))
     }
 
-    private fun generarEventosParaReceta(receta: Receta): List<EventoTratamiento> {
-        val eventos = mutableListOf<EventoTratamiento>()
+    private fun generarTomasDeUnDia(receta: Receta, fechaStr: String): List<TomaMedicamento> {
+        val tomas = mutableListOf<TomaMedicamento>()
+        val vecesNum = try { receta.vecesAlDia.filter { it.isDigit() }.toInt() } catch (e: Exception) { 0 }
+        val frecuenciaNum = try { receta.frecuencia.filter { it.isDigit() }.toInt() } catch (e: Exception) { 0 }
         
-        val veces = try {
-            receta.vecesAlDia.filter { it.isDigit() }.toInt().takeIf { it > 0 } ?: 1
-        } catch (e: Exception) {
-            1
+        var totalTomas = 1
+        if (vecesNum > 0) totalTomas = vecesNum
+        else if (frecuenciaNum >= 4) totalTomas = 24 / frecuenciaNum
+        else if (frecuenciaNum > 0) totalTomas = frecuenciaNum
+
+        val horasProgramadas = when (totalTomas) {
+            1 -> listOf("08:00 AM")
+            2 -> listOf("08:00 AM", "08:00 PM")
+            3 -> listOf("08:00 AM", "02:00 PM", "08:00 PM")
+            4 -> listOf("06:00 AM", "12:00 PM", "06:00 PM", "12:00 AM")
+            else -> {
+                val list = mutableListOf<String>()
+                val intervalo = 24 / totalTomas
+                for (i in 0 until totalTomas) {
+                    val horaC = (8 + (i * intervalo)) % 24
+                    val displayHour = if (horaC > 12) horaC - 12 else if (horaC == 0) 12 else horaC
+                    val amPm = if (horaC >= 12) "PM" else "AM"
+                    list.add(String.format(Locale.getDefault(), "%02d:00 %s", displayHour, amPm))
+                }
+                list
+            }
         }
 
-        // Mapeo de periodos según la cantidad de veces al día
-        val etiquetas = when (veces) {
-            1 -> listOf("Mañana")
-            2 -> listOf("Mañana", "Noche")
-            3 -> listOf("Mañana", "Tarde", "Noche")
-            4 -> listOf("Mañana", "Mediodía", "Tarde", "Noche")
-            else -> List(veces) { "Toma ${it + 1}" }
-        }
-
-        val intervaloHoras = 24 / veces
-        
-        for (i in 0 until veces) {
-            val etiqueta = etiquetas.getOrElse(i) { "Toma ${i + 1}" }
-            val horaC = (8 + (i * intervaloHoras)) % 24
-            val displayHour = if (horaC > 12) horaC - 12 else if (horaC == 0) 12 else horaC
-            val amPm = if (horaC >= 12) "PM" else "AM"
-            
-            val horaStr = String.format(Locale.getDefault(), "%02d:00 %s", displayHour, amPm)
-            
-            eventos.add(EventoTratamiento(
-                id = "${receta.id}_$i",
-                nombre = receta.nombreMedicamento,
-                hora = "Toma: $etiqueta ($horaStr)",
-                tiempoRestante = "Estado: Pendiente"
+        horasProgramadas.forEachIndexed { index, horaStr ->
+            val deterministicId = "${receta.id}_${fechaStr}_$index"
+            tomas.add(TomaMedicamento(
+                id = deterministicId,
+                idUsuario = receta.userId,
+                idReceta = receta.id,
+                nombreMedicamento = receta.nombreMedicamento,
+                fecha = fechaStr,
+                horaProgramada = horaStr,
+                estado = "PENDIENTE",
+                dosis = receta.dosis
             ))
         }
+        return tomas
+    }
+
+    fun marcarToma(evento: EventoTratamiento, completado: Boolean) {
+        val nuevoEstado = if (completado) "TOMADA" else "PENDIENTE"
+        val fechaCompletada = if (completado) System.currentTimeMillis() else null
         
-        return eventos
+        repositorio.actualizarEstadoToma(evento.id, nuevoEstado, fechaCompletada) { exito ->
+            if (exito) {
+                val listaActual = _eventos.value?.map {
+                    if (it.id == evento.id) it.copy(completado = completado) else it
+                }
+                _eventos.postValue(listaActual)
+            }
+        }
     }
 }

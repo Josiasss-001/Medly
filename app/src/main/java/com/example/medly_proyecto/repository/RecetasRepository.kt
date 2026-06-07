@@ -1,8 +1,10 @@
 package com.example.medly_proyecto.repository
 
 import com.example.medly_proyecto.model.Receta
+import com.example.medly_proyecto.model.TomaMedicamento
 import com.example.medly_proyecto.util.SecurityUtils
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 
 class RecetasRepository {
     private val db = FirebaseFirestore.getInstance()
@@ -24,26 +26,13 @@ class RecetasRepository {
         )
 
         if (receta.id.isNotEmpty()) {
-            // ACTUALIZAR receta existente
-            db.collection("recetas_encriptadas")
-                .document(receta.id)
-                .set(recetaEncriptada)
-                .addOnSuccessListener {
-                    callback(true, receta.id)
-                }
-                .addOnFailureListener { e ->
-                    callback(false, e.message)
-                }
+            db.collection("recetas_encriptadas").document(receta.id).set(recetaEncriptada)
+                .addOnSuccessListener { callback(true, receta.id) }
+                .addOnFailureListener { e -> callback(false, e.message) }
         } else {
-            // CREAR nueva receta
-            db.collection("recetas_encriptadas")
-                .add(recetaEncriptada)
-                .addOnSuccessListener { documentReference ->
-                    callback(true, documentReference.id)
-                }
-                .addOnFailureListener { e ->
-                    callback(false, e.message)
-                }
+            db.collection("recetas_encriptadas").add(recetaEncriptada)
+                .addOnSuccessListener { doc -> callback(true, doc.id) }
+                .addOnFailureListener { e -> callback(false, e.message) }
         }
     }
 
@@ -71,18 +60,66 @@ class RecetasRepository {
                 }
                 callback(lista)
             }
-            .addOnFailureListener {
-                callback(null)
-            }
+            .addOnFailureListener { callback(null) }
     }
 
     fun eliminarReceta(recetaId: String, callback: (Boolean, String?) -> Unit) {
         db.collection("recetas_encriptadas").document(recetaId).delete()
             .addOnSuccessListener {
+                eliminarTomasDeReceta(recetaId)
                 callback(true, null)
             }
             .addOnFailureListener { e ->
                 callback(false, e.message)
+            }
+    }
+
+    // --- Tomas Programadas (Persistencia con IDs Determinísticos) ---
+
+    fun guardarTomasMasivas(tomas: List<TomaMedicamento>, callback: (Boolean) -> Unit) {
+        if (tomas.isEmpty()) { callback(true); return }
+        val batch = db.batch()
+        tomas.forEach { toma ->
+            val docRef = db.collection("tomas_programadas").document(toma.id)
+            batch.set(docRef, toma)
+        }
+        batch.commit().addOnCompleteListener { callback(it.isSuccessful) }
+    }
+
+    fun getTomasPorFecha(userId: String, fecha: String, callback: (List<TomaMedicamento>?) -> Unit) {
+        db.collection("tomas_programadas")
+            .whereEqualTo("idUsuario", userId)
+            .whereEqualTo("fecha", fecha)
+            .get()
+            .addOnSuccessListener { callback(it.toObjects(TomaMedicamento::class.java)) }
+            .addOnFailureListener { callback(null) }
+    }
+
+    fun getTodasLasTomas(userId: String, callback: (List<TomaMedicamento>?) -> Unit) {
+        db.collection("tomas_programadas")
+            .whereEqualTo("idUsuario", userId)
+            .get()
+            .addOnSuccessListener { callback(it.toObjects(TomaMedicamento::class.java)) }
+            .addOnFailureListener { callback(null) }
+    }
+
+    fun actualizarEstadoToma(tomaId: String, nuevoEstado: String, timestamp: Long?, callback: (Boolean) -> Unit) {
+        val updates = mutableMapOf<String, Any>("estado" to nuevoEstado)
+        if (timestamp != null) updates["fechaCompletada"] = timestamp
+        else updates["fechaCompletada"] = com.google.firebase.firestore.FieldValue.delete()
+
+        db.collection("tomas_programadas").document(tomaId).update(updates)
+            .addOnCompleteListener { callback(it.isSuccessful) }
+    }
+
+    private fun eliminarTomasDeReceta(recetaId: String) {
+        db.collection("tomas_programadas")
+            .whereEqualTo("idReceta", recetaId)
+            .get()
+            .addOnSuccessListener { documents ->
+                val batch = db.batch()
+                documents.forEach { batch.delete(it.reference) }
+                batch.commit()
             }
     }
 }
