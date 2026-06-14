@@ -16,6 +16,7 @@
     <string name="horas">Horas</string>
     <string name="mapa">Mapa</string>
     <string name="perfil">Perfil</string>
+    <string name="editardatos">Editar Datos</string>
     <string name="cerrar_sesion">Cerrar Sesión</string>
     <string name="escanear">Escanear</string>
 
@@ -43,4 +44,6 @@
     <string name="crear_cuenta">Crear Cuenta</string>
     <string name="confirm_password_hint">Confirmar Contraseña</string>
     <string name="o_continua_con">O continúa con</string>
+
+    <string name="citas_para_el">Citas para el %1$s</string>
 </resources>

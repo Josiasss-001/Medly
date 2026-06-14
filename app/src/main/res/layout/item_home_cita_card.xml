@@ -72,7 +72,7 @@
             android:id="@+id/tvDoctorCita"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="8dp"
             android:text="--"
             android:textColor="#64748B"
             android:textSize="14sp"
@@ -114,6 +114,7 @@
             android:textColor="#009688"
             android:textSize="14sp"
             android:textStyle="bold"
+            android:layout_marginTop="12dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />

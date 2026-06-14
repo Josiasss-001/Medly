@@ -9,5 +9,6 @@ data class Farmacia(
     val ubicacion: LatLng,
     var distancia: String = "",
     var tiempo: String = "",
-    var distanciaMetros: Float = 0f
+    var distanciaMetros: Float = 0f,
+    val tipo: String = "FARMACIA" // "FARMACIA" o "CESFAM"
 )

@@ -22,7 +22,7 @@
             <ImageView
                 android:id="@+id/recipeLargeImage"
                 android:layout_width="match_parent"
-                android:layout_height="320dp"
+                android:layout_height="340dp"
                 android:scaleType="centerCrop"
                 android:background="#EEEEEE"
                 android:contentDescription="Foto de receta"
@@ -30,8 +30,9 @@
 
             <!-- Capa de difuminado visual (Degradado) -->
             <View
+                android:id="@+id/gradientOverlayReceta"
                 android:layout_width="match_parent"
-                android:layout_height="320dp"
+                android:layout_height="340dp"
                 android:background="@drawable/gradient_blur_overlay"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -39,9 +40,9 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="-40dp"
-                app:cardCornerRadius="40dp"
-                app:cardElevation="4dp"
+                android:layout_marginTop="-60dp"
+                app:cardCornerRadius="32dp"
+                app:cardElevation="8dp"
                 app:strokeWidth="0dp"
                 app:layout_constraintTop_toBottomOf="@+id/recipeLargeImage">
 
@@ -49,16 +50,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="24dp"
+                    android:padding="28dp"
                     android:background="@color/white">
 
-                    <!-- Indicador superior -->
+                    <!-- Indicador superior elegante -->
                     <View
-                        android:layout_width="40dp"
-                        android:layout_height="4dp"
+                        android:layout_width="48dp"
+                        android:layout_height="5dp"
                         android:layout_gravity="center"
-                        android:layout_marginBottom="20dp"
-                        android:background="#EEEEEE" />
+                        android:layout_marginBottom="24dp"
+                        android:background="#E0E0E0" />
 
                     <!-- Título (Medicamento) Editable -->
                     <EditText
@@ -68,12 +69,13 @@
                         android:text="Analizando receta..."
                         android:textAlignment="center"
                         android:textColor="@color/black"
-                        android:textSize="22sp"
+                        android:textSize="24sp"
                         android:textStyle="bold"
                         android:background="@null"
                         android:enabled="false"
                         android:inputType="textCapWords"
-                        android:autofillHints="none" />
+                        android:autofillHints="none"
+                        android:letterSpacing="-0.02" />
 
                     <!-- Instrucciones Breves -->
                     <EditText
@@ -83,9 +85,9 @@
                         android:layout_marginTop="8dp"
                         android:text="Instrucciones del tratamiento aparecerán aquí."
                         android:textAlignment="center"
-                        android:textColor="#888888"
-                        android:textSize="14sp"
-                        android:lineSpacingExtra="3dp"
+                        android:textColor="#5F6368"
+                        android:textSize="15sp"
+                        android:lineSpacingExtra="4dp"
                         android:background="@null"
                         android:enabled="false"
                         android:inputType="textMultiLine"
@@ -93,31 +95,29 @@
 
                     <View
                         android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginTop="20dp"
-                        android:background="#F0F0F0" />
+                        android:layout_height="1.5dp"
+                        android:layout_marginTop="24dp"
+                        android:layout_marginBottom="12dp"
+                        android:background="#F1F3F4" />
 
-                    <!-- Datos en Formato Lista Vertical -->
+                    <!-- Datos en Formato Lista -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
                         android:orientation="vertical">
 
                         <!-- Item: Dosis -->
-                        <LinearLayout
+                        <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:paddingVertical="10dp"
-                            android:gravity="center_vertical">
+                            android:paddingVertical="12dp">
                             <TextView
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
                                 android:text="Dosis"
-                                android:textColor="#666666"
-                                android:textSize="15sp" />
+                                android:textColor="#5F6368"
+                                android:textSize="15sp"
+                                android:layout_alignParentStart="true" />
                             <EditText
                                 android:id="@+id/doseText"
                                 android:layout_width="wrap_content"
@@ -128,28 +128,24 @@
                                 android:textSize="15sp"
                                 android:background="@null"
                                 android:enabled="false"
-                                android:minWidth="60dp"
-                                android:gravity="end"
-                                android:inputType="text"
-                                android:autofillHints="none" />
-                        </LinearLayout>
+                                android:layout_alignParentEnd="true"
+                                android:inputType="text" />
+                        </RelativeLayout>
 
-                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F9F9F9"/>
+                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F8F9FA"/>
 
                         <!-- Item: Frecuencia -->
-                        <LinearLayout
+                        <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:paddingVertical="10dp"
-                            android:gravity="center_vertical">
+                            android:paddingVertical="12dp">
                             <TextView
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
                                 android:text="Frecuencia"
-                                android:textColor="#666666"
-                                android:textSize="15sp" />
+                                android:textColor="#5F6368"
+                                android:textSize="15sp"
+                                android:layout_alignParentStart="true" />
                             <EditText
                                 android:id="@+id/freqText"
                                 android:layout_width="wrap_content"
@@ -160,28 +156,24 @@
                                 android:textSize="15sp"
                                 android:background="@null"
                                 android:enabled="false"
-                                android:minWidth="60dp"
-                                android:gravity="end"
-                                android:inputType="text"
-                                android:autofillHints="none" />
-                        </LinearLayout>
+                                android:layout_alignParentEnd="true"
+                                android:inputType="text" />
+                        </RelativeLayout>
 
-                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F9F9F9"/>
+                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F8F9FA"/>
 
                         <!-- Item: Duración -->
-                        <LinearLayout
+                        <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:paddingVertical="10dp"
-                            android:gravity="center_vertical">
+                            android:paddingVertical="12dp">
                             <TextView
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
                                 android:text="Duración"
-                                android:textColor="#666666"
-                                android:textSize="15sp" />
+                                android:textColor="#5F6368"
+                                android:textSize="15sp"
+                                android:layout_alignParentStart="true" />
                             <EditText
                                 android:id="@+id/durationText"
                                 android:layout_width="wrap_content"
@@ -192,28 +184,24 @@
                                 android:textSize="15sp"
                                 android:background="@null"
                                 android:enabled="false"
-                                android:minWidth="60dp"
-                                android:gravity="end"
-                                android:inputType="text"
-                                android:autofillHints="none" />
-                        </LinearLayout>
+                                android:layout_alignParentEnd="true"
+                                android:inputType="text" />
+                        </RelativeLayout>
 
-                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F9F9F9"/>
+                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F8F9FA"/>
 
                         <!-- Item: Cantidad a Tomar -->
-                        <LinearLayout
+                        <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:paddingVertical="10dp"
-                            android:gravity="center_vertical">
+                            android:paddingVertical="12dp">
                             <TextView
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
                                 android:text="Cantidad a tomar"
-                                android:textColor="#666666"
-                                android:textSize="15sp" />
+                                android:textColor="#5F6368"
+                                android:textSize="15sp"
+                                android:layout_alignParentStart="true" />
                             <EditText
                                 android:id="@+id/qtyText"
                                 android:layout_width="wrap_content"
@@ -224,28 +212,24 @@
                                 android:textSize="15sp"
                                 android:background="@null"
                                 android:enabled="false"
-                                android:minWidth="60dp"
-                                android:gravity="end"
-                                android:inputType="text"
-                                android:autofillHints="none" />
-                        </LinearLayout>
+                                android:layout_alignParentEnd="true"
+                                android:inputType="text" />
+                        </RelativeLayout>
 
-                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F9F9F9"/>
+                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F8F9FA"/>
 
                         <!-- Item: Cantidad del Envase -->
-                        <LinearLayout
+                        <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:paddingVertical="10dp"
-                            android:gravity="center_vertical">
+                            android:paddingVertical="12dp">
                             <TextView
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
                                 android:text="Cantidad en envase"
-                                android:textColor="#666666"
-                                android:textSize="15sp" />
+                                android:textColor="#5F6368"
+                                android:textSize="15sp"
+                                android:layout_alignParentStart="true" />
                             <EditText
                                 android:id="@+id/envaseText"
                                 android:layout_width="wrap_content"
@@ -256,28 +240,24 @@
                                 android:textSize="15sp"
                                 android:background="@null"
                                 android:enabled="false"
-                                android:minWidth="60dp"
-                                android:gravity="end"
-                                android:inputType="text"
-                                android:autofillHints="none" />
-                        </LinearLayout>
+                                android:layout_alignParentEnd="true"
+                                android:inputType="text" />
+                        </RelativeLayout>
 
-                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F9F9F9"/>
+                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F8F9FA"/>
 
                         <!-- Item: Veces al día -->
-                        <LinearLayout
+                        <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:paddingVertical="10dp"
-                            android:gravity="center_vertical">
+                            android:paddingVertical="12dp">
                             <TextView
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
                                 android:text="Veces al día"
-                                android:textColor="#666666"
-                                android:textSize="15sp" />
+                                android:textColor="#5F6368"
+                                android:textSize="15sp"
+                                android:layout_alignParentStart="true" />
                             <EditText
                                 android:id="@+id/timesText"
                                 android:layout_width="wrap_content"
@@ -288,28 +268,26 @@
                                 android:textSize="15sp"
                                 android:background="@null"
                                 android:enabled="false"
-                                android:minWidth="60dp"
-                                android:gravity="end"
-                                android:inputType="text"
-                                android:autofillHints="none" />
-                        </LinearLayout>
+                                android:layout_alignParentEnd="true"
+                                android:inputType="text" />
+                        </RelativeLayout>
 
                     </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginTop="16dp"
-                        android:background="#F0F0F0" />
+                        android:layout_height="1.5dp"
+                        android:layout_marginTop="12dp"
+                        android:background="#F1F3F4" />
 
                     <!-- Sección: Método de uso/consumo -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
-                        android:text="Método de uso/consumo"
+                        android:text="Método de uso / consumo"
                         android:textColor="@color/black"
-                        android:textSize="16sp"
+                        android:textSize="17sp"
                         android:textStyle="bold" />
 
                     <EditText
@@ -317,138 +295,191 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
+                        android:padding="12dp"
                         android:text="Cargando indicaciones de uso..."
-                        android:textColor="#666666"
-                        android:textSize="14sp"
-                        android:lineSpacingExtra="4dp"
-                        android:background="@null"
+                        android:textColor="#5F6368"
+                        android:textSize="15sp"
+                        android:background="@drawable/rounded_dialog_bg"
+                        android:backgroundTint="#F8F9FA"
                         android:enabled="false"
                         android:inputType="textMultiLine"
-                        android:autofillHints="none" />
+                        android:lineSpacingExtra="4dp" />
 
                     <!-- Espacio antes de los botones -->
-                    <View android:layout_width="match_parent" android:layout_height="24dp" />
+                    <View android:layout_width="match_parent" android:layout_height="32dp" />
 
-                    <!-- Botón Empezar Tratamiento -->
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/btnEmpezarTratamiento"
+                    <!-- Acciones Finales Modernizadas -->
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="60dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:cardCornerRadius="20dp"
-                        app:cardBackgroundColor="@color/Celeste"
-                        app:strokeWidth="0dp">
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <!-- Botón Empezar Tratamiento -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/btnEmpezarTratamiento"
+                            android:layout_width="match_parent"
+                            android:layout_height="64dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            app:cardCornerRadius="18dp"
+                            app:cardBackgroundColor="@color/Celeste"
+                            app:cardElevation="4dp"
+                            app:strokeWidth="0dp">
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="EMPEZAR TRATAMIENTO"
+                                    android:textColor="@color/white"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:letterSpacing="0.05" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Botón Principal Guardar -->
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/btnConfirmarIA"
+                            android:layout_width="match_parent"
+                            android:layout_height="64dp"
+                            android:layout_marginTop="16dp"
+                            android:clickable="true"
+                            android:focusable="true"
+                            app:cardCornerRadius="18dp"
+                            app:cardBackgroundColor="#202124"
+                            app:cardElevation="2dp"
+                            app:strokeWidth="0dp">
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:gravity="center">
+                                <TextView
+                                    android:id="@+id/textBtnConfirmar"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="GUARDAR CAMBIOS"
+                                    android:textColor="@color/white"
+                                    android:textSize="16sp"
+                                    android:textStyle="bold"
+                                    android:letterSpacing="0.05" />
+                            </LinearLayout>
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <!-- Botones de Acción Secundarios -->
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="20dp"
+                            android:orientation="horizontal"
                             android:gravity="center">
-                            <TextView
-                                android:layout_width="wrap_content"
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnAgregarManualmente"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:text="EMPEZAR TRATAMIENTO"
-                                android:textColor="@color/white"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
+                                android:layout_weight="1"
+                                android:text="EDITAR"
+                                android:textColor="@color/Celeste"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                app:icon="@android:drawable/ic_menu_edit"
+                                app:iconTint="@color/Celeste"
+                                app:iconGravity="textStart" />
 
-                    <!-- Botón Principal Guardar -->
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/btnConfirmarIA"
-                        android:layout_width="match_parent"
-                        android:layout_height="60dp"
-                        android:layout_marginTop="12dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:cardCornerRadius="20dp"
-                        app:cardBackgroundColor="#333333"
-                        app:strokeWidth="0dp">
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:gravity="center">
-                            <TextView
-                                android:id="@+id/textBtnConfirmar"
-                                android:layout_width="wrap_content"
+                            <View
+                                android:layout_width="1dp"
+                                android:layout_height="24dp"
+                                android:background="#DADCE0" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnEliminarReceta"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:text="GUARDAR CAMBIOS"
-                                android:textColor="@color/white"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
+                                android:layout_weight="1"
+                                android:text="ELIMINAR"
+                                android:textColor="#D93025"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                app:icon="@android:drawable/ic_menu_delete"
+                                app:iconTint="#D93025"
+                                app:iconGravity="textStart" />
                         </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
-
-                    <!-- Botón para Editar / Agregar Manualmente -->
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnAgregarManualmente"
-                        style="@style/Widget.MaterialComponents.Button.TextButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="8dp"
-                        android:text="EDITAR INFORMACIÓN"
-                        android:textColor="@color/Celeste"
-                        android:textStyle="bold"
-                        app:cornerRadius="20dp" />
-
-                    <!-- Botón para Eliminar Receta -->
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnEliminarReceta"
-                        style="@style/Widget.MaterialComponents.Button.TextButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="4dp"
-                        android:text="ELIMINAR RECETA"
-                        android:textColor="#FF3B30"
-                        android:textStyle="bold"
-                        app:cornerRadius="20dp" />
+                    </LinearLayout>
 
                     <!-- Padding inferior extra para scroll -->
-                    <View android:layout_width="match_parent" android:layout_height="80dp" />
+                    <View android:layout_width="match_parent" android:layout_height="40dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Botón Volver Flotante -->
+    <!-- Botón Volver Refinado -->
     <ImageButton
         android:id="@+id/backButtonDetail"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="48dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="50dp"
+        android:background="@drawable/circle_white_bg"
+        android:elevation="8dp"
         android:src="@drawable/abc_ic_ab_back_material"
         android:contentDescription="Atrás"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/white" />
+        app:tint="#1E293B" />
 
-    <!-- Cargando Overlay -->
+    <!-- Cargando Overlay Moderno -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/loadingIAOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#E6FFFFFF"
+        android:background="@color/white"
         android:visibility="gone"
-        android:elevation="10dp">
-        <ProgressBar
-            android:id="@+id/progressBarDetail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:indeterminateTint="@color/Celeste"
+        android:elevation="30dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/lottieAnalyzingRecipe"
+            android:layout_width="280dp"
+            android:layout_height="280dp"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/cargando"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.4" />
+
         <TextView
+            android:id="@+id/loadingTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="La IA está leyendo tu receta..."
+            android:text="Interpretando tu receta médica..."
             android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.02"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/progressBarDetail" />
+            app:layout_constraintTop_toBottomOf="@id/lottieAnalyzingRecipe" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Estamos extrayendo las dosis y frecuencias"
+            android:textColor="#5F6368"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/loadingTitle"
+            android:layout_marginTop="8dp" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

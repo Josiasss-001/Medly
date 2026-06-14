@@ -18,11 +18,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <!-- Imagen Superior (Header) -->
+            <!-- Imagen Superior (Header) con efecto Parallax -->
             <ImageView
                 android:id="@+id/appointmentLargeImage"
                 android:layout_width="match_parent"
-                android:layout_height="320dp"
+                android:layout_height="340dp"
                 android:scaleType="centerCrop"
                 android:background="#EEEEEE"
                 android:contentDescription="Foto de cita médica"
@@ -30,18 +30,20 @@
 
             <!-- Capa de difuminado visual (Degradado) -->
             <View
+                android:id="@+id/gradientOverlay"
                 android:layout_width="match_parent"
-                android:layout_height="320dp"
+                android:layout_height="340dp"
                 android:background="@drawable/gradient_blur_overlay"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <!-- Tarjeta de Información Superpuesta -->
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardInfo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="-40dp"
-                app:cardCornerRadius="40dp"
-                app:cardElevation="4dp"
+                android:layout_marginTop="-60dp"
+                app:cardCornerRadius="32dp"
+                app:cardElevation="8dp"
                 app:strokeWidth="0dp"
                 app:layout_constraintTop_toBottomOf="@+id/appointmentLargeImage">
 
@@ -49,31 +51,32 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="24dp"
+                    android:padding="28dp"
                     android:background="@color/white">
 
-                    <!-- Indicador superior -->
+                    <!-- Indicador superior elegante -->
                     <View
-                        android:layout_width="40dp"
-                        android:layout_height="4dp"
+                        android:layout_width="48dp"
+                        android:layout_height="5dp"
                         android:layout_gravity="center"
-                        android:layout_marginBottom="20dp"
-                        android:background="#EEEEEE" />
+                        android:layout_marginBottom="24dp"
+                        android:background="#E0E0E0" />
 
-                    <!-- Título (Especialidad) Editable -->
+                    <!-- Título (Especialidad) -->
                     <EditText
                         android:id="@+id/appointmentSpecialtyDetail"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Analizando cita..."
+                        android:text="Especialidad"
                         android:textAlignment="center"
                         android:textColor="@color/black"
-                        android:textSize="22sp"
+                        android:textSize="24sp"
                         android:textStyle="bold"
                         android:background="@null"
                         android:enabled="false"
                         android:inputType="textCapWords"
-                        android:autofillHints="none" />
+                        android:autofillHints="none"
+                        android:letterSpacing="-0.02" />
 
                     <!-- Nombre del Médico -->
                     <EditText
@@ -81,57 +84,74 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Médico asignado aparecerá aquí."
+                        android:text="Médico asignado"
                         android:textAlignment="center"
-                        android:textColor="#888888"
-                        android:textSize="14sp"
+                        android:textColor="#5F6368"
+                        android:textSize="16sp"
                         android:background="@null"
                         android:enabled="false"
                         android:inputType="textPersonName"
                         android:autofillHints="none" />
 
-                    <!-- Centro Médico (En pequeño debajo del médico) -->
-                    <EditText
-                        android:id="@+id/centerText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="--"
-                        android:textAlignment="center"
-                        android:textColor="#AAAAAA"
-                        android:textSize="12sp"
-                        android:background="@null"
-                        android:enabled="false"
-                        android:inputType="text"
-                        android:autofillHints="none" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginTop="20dp"
-                        android:background="#F0F0F0" />
-
-                    <!-- Datos en Formato Lista Vertical -->
+                    <!-- Centro Médico y Dirección -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:orientation="vertical"
+                        android:layout_marginTop="6dp"
+                        android:gravity="center">
+
+                        <EditText
+                            android:id="@+id/centerText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="--"
+                            android:textColor="#80868B"
+                            android:textSize="14sp"
+                            android:background="@null"
+                            android:enabled="false"
+                            android:inputType="text"
+                            android:autofillHints="none" />
+
+                        <EditText
+                            android:id="@+id/addressText"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="--"
+                            android:textColor="#9AA0A6"
+                            android:textSize="13sp"
+                            android:background="@null"
+                            android:enabled="false"
+                            android:inputType="text"
+                            android:autofillHints="none" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1.5dp"
+                        android:layout_marginTop="24dp"
+                        android:layout_marginBottom="12dp"
+                        android:background="#F1F3F4" />
+
+                    <!-- Lista de Detalles con mejor jerarquía -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:orientation="vertical">
 
                         <!-- Item: Fecha -->
-                        <LinearLayout
+                        <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:paddingVertical="10dp"
-                            android:gravity="center_vertical">
+                            android:paddingVertical="12dp">
                             <TextView
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Fecha"
-                                android:textColor="#666666"
-                                android:textSize="15sp" />
+                                android:text="Fecha de cita"
+                                android:textColor="#5F6368"
+                                android:textSize="15sp"
+                                android:layout_alignParentStart="true" />
                             <EditText
                                 android:id="@+id/dateText"
                                 android:layout_width="wrap_content"
@@ -142,28 +162,24 @@
                                 android:textSize="15sp"
                                 android:background="@null"
                                 android:enabled="false"
-                                android:minWidth="60dp"
-                                android:gravity="end"
-                                android:inputType="date"
-                                android:autofillHints="none" />
-                        </LinearLayout>
+                                android:layout_alignParentEnd="true"
+                                android:inputType="date" />
+                        </RelativeLayout>
 
-                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F9F9F9"/>
+                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F8F9FA"/>
 
                         <!-- Item: Hora -->
-                        <LinearLayout
+                        <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:paddingVertical="10dp"
-                            android:gravity="center_vertical">
+                            android:paddingVertical="12dp">
                             <TextView
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Hora"
-                                android:textColor="#666666"
-                                android:textSize="15sp" />
+                                android:text="Hora programada"
+                                android:textColor="#5F6368"
+                                android:textSize="15sp"
+                                android:layout_alignParentStart="true" />
                             <EditText
                                 android:id="@+id/hourText"
                                 android:layout_width="wrap_content"
@@ -174,51 +190,45 @@
                                 android:textSize="15sp"
                                 android:background="@null"
                                 android:enabled="false"
-                                android:minWidth="60dp"
-                                android:gravity="end"
-                                android:inputType="time"
-                                android:autofillHints="none" />
-                        </LinearLayout>
+                                android:layout_alignParentEnd="true"
+                                android:inputType="time" />
+                        </RelativeLayout>
 
-                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F9F9F9"/>
+                        <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#F8F9FA"/>
 
                         <!-- Item: Motivo -->
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:paddingVertical="10dp"
-                            android:gravity="center_vertical">
+                            android:orientation="vertical"
+                            android:paddingVertical="12dp">
                             <TextView
-                                android:layout_width="0dp"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Motivo Consulta"
-                                android:textColor="#666666"
-                                android:textSize="15sp" />
+                                android:text="Motivo de la consulta"
+                                android:textColor="#5F6368"
+                                android:textSize="15sp"
+                                android:layout_marginBottom="4dp"/>
                             <EditText
                                 android:id="@+id/reasonText"
-                                android:layout_width="wrap_content"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="--"
                                 android:textColor="@color/black"
                                 android:textStyle="bold"
-                                android:textSize="15sp"
+                                android:textSize="16sp"
                                 android:background="@null"
                                 android:enabled="false"
-                                android:minWidth="60dp"
-                                android:gravity="end"
-                                android:inputType="text"
-                                android:autofillHints="none" />
+                                android:inputType="textMultiLine" />
                         </LinearLayout>
 
                     </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginTop="16dp"
-                        android:background="#F0F0F0" />
+                        android:layout_height="1.5dp"
+                        android:layout_marginTop="12dp"
+                        android:background="#F1F3F4" />
 
                     <!-- Sección: Instrucciones Previas -->
                     <TextView
@@ -227,7 +237,7 @@
                         android:layout_marginTop="20dp"
                         android:text="Instrucciones Previas"
                         android:textColor="@color/black"
-                        android:textSize="16sp"
+                        android:textSize="17sp"
                         android:textStyle="bold" />
 
                     <EditText
@@ -235,119 +245,182 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Cargando instrucciones adicionales..."
-                        android:textColor="#666666"
-                        android:textSize="14sp"
-                        android:lineSpacingExtra="4dp"
-                        android:background="@null"
+                        android:padding="12dp"
+                        android:text="--"
+                        android:textColor="#5F6368"
+                        android:textSize="15sp"
+                        android:background="@drawable/rounded_dialog_bg"
+                        android:backgroundTint="#F8F9FA"
                         android:enabled="false"
                         android:inputType="textMultiLine"
-                        android:autofillHints="none" />
+                        android:lineSpacingExtra="4dp" />
 
-                    <!-- Botones de Acción -->
-                    <View android:layout_width="match_parent" android:layout_height="24dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnReanalizarCita"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    <!-- Acciones Finales Modernizadas -->
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:text="VOLVER A ANALIZAR"
-                        android:textColor="@color/Celeste"
-                        app:strokeColor="@color/Celeste"
-                        app:cornerRadius="20dp" />
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="32dp"
+                        android:orientation="vertical">
 
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/btnGuardarCita"
-                        android:layout_width="match_parent"
-                        android:layout_height="60dp"
-                        android:layout_marginTop="12dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:cardCornerRadius="20dp"
-                        app:cardBackgroundColor="#333333"
-                        app:strokeWidth="0dp">
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnGuardarCita"
+                            android:layout_width="match_parent"
+                            android:layout_height="64dp"
+                            android:text="GUARDAR CITA"
+                            android:textColor="@color/white"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            app:backgroundTint="@color/Celeste"
+                            app:cornerRadius="18dp"
+                            app:elevation="4dp"
+                            android:letterSpacing="0.05" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnEditarCita"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="64dp"
+                            android:layout_marginTop="16dp"
+                            android:text="EDITAR INFORMACIÓN"
+                            android:textColor="@color/Celeste"
+                            android:textStyle="bold"
+                            app:cornerRadius="18dp"
+                            app:strokeColor="@color/Celeste"
+                            app:strokeWidth="2dp" />
+
                         <LinearLayout
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="20dp"
+                            android:orientation="horizontal"
                             android:gravity="center">
-                            <TextView
-                                android:layout_width="wrap_content"
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnReanalizarCita"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:text="GUARDAR CITA"
-                                android:textColor="@color/white"
-                                android:textSize="14sp"
-                                android:textStyle="bold" />
+                                android:layout_weight="1"
+                                android:text="RE-ANALIZAR"
+                                android:textColor="#80868B"
+                                android:textSize="13sp"
+                                app:icon="@android:drawable/ic_menu_rotate"
+                                app:iconTint="#80868B"
+                                app:iconGravity="textStart" />
+
+                            <View
+                                android:layout_width="1dp"
+                                android:layout_height="24dp"
+                                android:background="#DADCE0" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnEliminarCita"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="ELIMINAR"
+                                android:textColor="#D93025"
+                                android:textSize="13sp"
+                                app:icon="@android:drawable/ic_menu_delete"
+                                app:iconTint="#D93025"
+                                app:iconGravity="textStart" />
                         </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
+                    </LinearLayout>
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnEditarCita"
-                        style="@style/Widget.MaterialComponents.Button.TextButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="8dp"
-                        android:text="EDITAR INFORMACIÓN"
-                        android:textColor="@color/Celeste"
-                        android:textStyle="bold"
-                        app:cornerRadius="20dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnEliminarCita"
-                        style="@style/Widget.MaterialComponents.Button.TextButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:layout_marginTop="4dp"
-                        android:text="ELIMINAR CITA"
-                        android:textColor="#FF3B30"
-                        android:textStyle="bold"
-                        app:cornerRadius="20dp" />
-
-                    <View android:layout_width="match_parent" android:layout_height="80dp" />
+                    <!-- Padding inferior extra para scroll fluido -->
+                    <View android:layout_width="match_parent" android:layout_height="40dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Botón Volver Flotante (Actualizado a estilo moderno) -->
+    <!-- Botón de Volver Refinado -->
     <ImageButton
         android:id="@+id/backButtonCitaDetail"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="48dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="50dp"
+        android:background="@drawable/circle_white_bg"
+        android:elevation="8dp"
         android:src="@drawable/abc_ic_ab_back_material"
-        android:contentDescription="Atrás"
+        android:padding="12dp"
+        android:scaleType="centerInside"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/white" />
+        android:contentDescription="Volver"
+        app:tint="#1E293B" />
 
-    <!-- Cargando Overlay -->
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- Overlay de Carga Moderno -->
+    <FrameLayout
         android:id="@+id/loadingCitaOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#E6FFFFFF"
+        android:background="#B3000000"
+        android:clickable="true"
+        android:focusable="true"
         android:visibility="gone"
-        android:elevation="10dp">
-        <ProgressBar
-            android:id="@+id/progressBarCita"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:indeterminateTint="@color/Celeste"
+        android:elevation="25dp">
+        <com.airbnb.lottie.LottieAnimationView
+            android:layout_width="220dp"
+            android:layout_height="220dp"
+            android:layout_gravity="center"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/cargando" />
+    </FrameLayout>
+
+    <!-- Overlay de Análisis IA Refinado -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/analyzingCitaOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white"
+        android:visibility="gone"
+        android:elevation="30dp"
+        android:clickable="true"
+        android:focusable="true">
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/lottieAnalyzing"
+            android:layout_width="280dp"
+            android:layout_height="280dp"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/cargando"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.4" />
+
         <TextView
+            android:id="@+id/tvAnalyzingTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="La IA está leyendo tu cita médica..."
+            android:text="Interpretando tu cita médica..."
             android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.02"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/progressBarCita" />
+            app:layout_constraintTop_toBottomOf="@id/lottieAnalyzing" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="45dp"
+            android:text="Esto tomará solo unos segundos"
+            android:textColor="#5F6368"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvAnalyzingTitle" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

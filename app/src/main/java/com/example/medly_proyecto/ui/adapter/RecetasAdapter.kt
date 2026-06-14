@@ -1,9 +1,11 @@
 package com.example.medly_proyecto.ui.adapter
 
+import android.graphics.Color
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medly_proyecto.R
@@ -32,6 +34,8 @@ class RecetasAdapter(
 
     override fun onBindViewHolder(holder: RecetaViewHolder, position: Int) {
         val receta = recetas[position]
+        val context = holder.itemView.context
+        
         holder.tvTitle.text = receta.nombreMedicamento
         
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -39,12 +43,32 @@ class RecetasAdapter(
 
         if (receta.imagenUri.isNotEmpty()) {
             try {
-                holder.imgRecipe.setImageURI(Uri.parse(receta.imagenUri))
+                val uri = Uri.parse(receta.imagenUri)
+                val isPdf = receta.imagenUri.lowercase().contains(".pdf") || 
+                            context.contentResolver.getType(uri) == "application/pdf"
+
+                if (isPdf) {
+                    holder.imgRecipe.setImageResource(R.drawable.imagenpdf)
+                    holder.imgRecipe.scaleType = ImageView.ScaleType.FIT_CENTER
+                    holder.imgRecipe.setPadding(25, 25, 25, 25)
+                    holder.imgRecipe.setBackgroundColor(Color.parseColor("#E53935"))
+                } else {
+                    holder.imgRecipe.setImageURI(uri)
+                    holder.imgRecipe.scaleType = ImageView.ScaleType.CENTER_CROP
+                    holder.imgRecipe.setPadding(0, 0, 0, 0)
+                    holder.imgRecipe.setBackgroundColor(Color.TRANSPARENT)
+                }
             } catch (e: Exception) {
                 holder.imgRecipe.setImageResource(R.mipmap.fondo)
+                holder.imgRecipe.scaleType = ImageView.ScaleType.CENTER_CROP
+                holder.imgRecipe.setPadding(0, 0, 0, 0)
+                holder.imgRecipe.setBackgroundColor(Color.TRANSPARENT)
             }
         } else {
             holder.imgRecipe.setImageResource(R.mipmap.fondo)
+            holder.imgRecipe.scaleType = ImageView.ScaleType.CENTER_CROP
+            holder.imgRecipe.setPadding(0, 0, 0, 0)
+            holder.imgRecipe.setBackgroundColor(Color.TRANSPARENT)
         }
 
         val listener = View.OnClickListener { onVerDetallesClick(receta) }

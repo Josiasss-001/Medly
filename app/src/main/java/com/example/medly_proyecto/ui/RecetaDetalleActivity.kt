@@ -3,8 +3,11 @@ package com.example.medly_proyecto.ui
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
 import android.util.Base64
 import android.view.View
 import android.widget.EditText
@@ -21,19 +24,19 @@ import com.example.medly_proyecto.R
 import com.example.medly_proyecto.model.Receta
 import com.example.medly_proyecto.viewmodel.RecetaDetalleViewModel
 import com.example.medly_proyecto.viewmodel.RecipeResult
-import com.example.medly_proyecto.viewmodel.RecetasViewModel
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import java.io.ByteArrayOutputStream
-import java.io.InputStream
+import java.io.File
+import java.io.FileOutputStream
 
 class RecetaDetalleActivity : AppCompatActivity() {
 
     private val viewModel: RecetaDetalleViewModel by viewModels()
-    private val recetasViewModel: RecetasViewModel by viewModels()
     private val auth = FirebaseAuth.getInstance()
 
     private lateinit var recipeLargeImage: ImageView
+    private lateinit var gradientOverlayReceta: View
     private lateinit var recipeTitleDetail: EditText
     private lateinit var recipeDescriptionDetail: EditText
     private lateinit var doseText: EditText
@@ -59,8 +62,8 @@ class RecetaDetalleActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_receta_detalle)
 
-        // Inicializar vistas
         recipeLargeImage = findViewById(R.id.recipeLargeImage)
+        gradientOverlayReceta = findViewById(R.id.gradientOverlayReceta)
         recipeTitleDetail = findViewById(R.id.recipeTitleDetail)
         recipeDescriptionDetail = findViewById(R.id.recipeDescriptionDetail)
         doseText = findViewById(R.id.doseText)
@@ -77,30 +80,24 @@ class RecetaDetalleActivity : AppCompatActivity() {
         btnEmpezarTratamiento = findViewById(R.id.btnEmpezarTratamiento)
         btnEliminarReceta = findViewById(R.id.btnEliminarReceta)
 
-        backButtonDetail.setOnClickListener {
-            onBackPressedDispatcher.onBackPressed()
-        }
-
-        btnAgregarManualmente.setOnClickListener {
-            toggleEditMode()
-        }
-
+        backButtonDetail.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
+        btnAgregarManualmente.setOnClickListener { toggleEditMode() }
         btnEmpezarTratamiento.setOnClickListener {
             val intent = Intent(this, CalendarioTratamientoActivity::class.java)
-            currentReceta?.let { receta ->
-                intent.putExtra("RECETA_ID", receta.id)
-                intent.putExtra("MEDICAMENTO_NOMBRE", receta.nombreMedicamento)
+            currentReceta?.let { r -> 
+                intent.putExtra("RECETA_ID", r.id)
+                intent.putExtra("MEDICAMENTO_NOMBRE", r.nombreMedicamento) 
             }
             startActivity(intent)
         }
-
-        btnEliminarReceta.setOnClickListener {
-            confirmarEliminacion()
-        }
+        btnEliminarReceta.setOnClickListener { confirmarEliminacion() }
 
         btnConfirmarIA.setOnClickListener {
             val userId = auth.currentUser?.uid
             if (userId != null) {
+                btnConfirmarIA.isEnabled = false
+                btnConfirmarIA.alpha = 0.5f
+
                 val manualData = RecipeResult(
                     nombreMedicamento = recipeTitleDetail.text.toString(),
                     instrucciones = recipeDescriptionDetail.text.toString(),
@@ -112,7 +109,6 @@ class RecetaDetalleActivity : AppCompatActivity() {
                     vecesAlDia = timesText.text.toString(),
                     metodoUso = useMethodText.text.toString()
                 )
-                // Usamos el ID de la receta actual si existe para actualizarla
                 viewModel.guardarReceta(userId, currentImageUri, manualData, currentReceta?.id)
             }
         }
@@ -120,7 +116,6 @@ class RecetaDetalleActivity : AppCompatActivity() {
         observarViewModel()
 
         val isNewRecipe = intent.getBooleanExtra("IS_NEW_RECIPE", true)
-
         if (isNewRecipe) {
             btnConfirmarIA.isEnabled = false
             btnConfirmarIA.alpha = 0.5f
@@ -129,62 +124,45 @@ class RecetaDetalleActivity : AppCompatActivity() {
             
             intent.getStringExtra("RECIPE_IMAGE_URI")?.let { uriString ->
                 currentImageUri = uriString
-                val uri = Uri.parse(uriString)
-                recipeLargeImage.setImageURI(uri)
-                
-                val base64 = convertUriToBase64(uri)
-                if (base64 != null) {
-                    viewModel.analizarReceta(base64, BuildConfig.OPENAI_API_KEY)
-                }
+                actualizarImagenCabecera(uriString)
+                analizarConIA(Uri.parse(uriString))
             }
         } else {
-            btnConfirmarIA.visibility = View.VISIBLE
+            btnConfirmarIA.visibility = View.GONE
             btnAgregarManualmente.visibility = View.VISIBLE
             btnEmpezarTratamiento.visibility = View.VISIBLE
             btnEliminarReceta.visibility = View.VISIBLE
-            
             currentReceta = intent.getSerializableExtra("RECETA_OBJ") as? Receta
             currentReceta?.let { 
                 currentImageUri = it.imagenUri
-                mostrarDatosReceta(it) 
+                mostrarDatosReceta(it)
+                actualizarImagenCabecera(it.imagenUri)
             }
         }
     }
 
-    private fun confirmarEliminacion() {
-        AlertDialog.Builder(this)
-            .setTitle("Eliminar Receta")
-            .setMessage("¿Estás seguro de que deseas eliminar esta receta permanentemente?")
-            .setPositiveButton("Eliminar") { _, _ ->
-                currentReceta?.let { receta ->
-                    auth.currentUser?.uid?.let { uid ->
-                        recetasViewModel.eliminarReceta(receta.id, uid)
-                    }
-                }
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
+    private fun isPdfUri(uriString: String): Boolean {
+        if (uriString.lowercase().contains(".pdf")) return true
+        return try {
+            contentResolver.getType(Uri.parse(uriString)) == "application/pdf"
+        } catch (e: Exception) {
+            false
+        }
     }
 
-    private fun toggleEditMode() {
-        isEditMode = !isEditMode
+    private fun actualizarImagenCabecera(uriString: String) {
+        if (uriString.isEmpty()) return
         
-        recipeTitleDetail.isEnabled = isEditMode
-        recipeDescriptionDetail.isEnabled = isEditMode
-        doseText.isEnabled = isEditMode
-        freqText.isEnabled = isEditMode
-        durationText.isEnabled = isEditMode
-        qtyText.isEnabled = isEditMode
-        envaseText.isEnabled = isEditMode
-        timesText.isEnabled = isEditMode
-        useMethodText.isEnabled = isEditMode
-
-        if (isEditMode) {
-            recipeTitleDetail.requestFocus()
-            Toast.makeText(this, "Modo edición activado", Toast.LENGTH_SHORT).show()
-            btnAgregarManualmente.text = "BLOQUEAR EDICIÓN"
+        if (isPdfUri(uriString)) {
+            recipeLargeImage.setImageResource(R.drawable.imagenpdf)
+            recipeLargeImage.scaleType = ImageView.ScaleType.FIT_CENTER
+            recipeLargeImage.setBackgroundColor(Color.parseColor("#E53935"))
+            gradientOverlayReceta.visibility = View.GONE
         } else {
-            btnAgregarManualmente.text = "EDITAR INFORMACIÓN"
+            recipeLargeImage.setImageURI(Uri.parse(uriString))
+            recipeLargeImage.scaleType = ImageView.ScaleType.CENTER_CROP
+            recipeLargeImage.setBackgroundColor(Color.TRANSPARENT)
+            gradientOverlayReceta.visibility = View.VISIBLE
         }
     }
 
@@ -198,89 +176,140 @@ class RecetaDetalleActivity : AppCompatActivity() {
         envaseText.setText(r.cantidadEnvase)
         timesText.setText(r.vecesAlDia)
         useMethodText.setText(r.metodoUso)
-        
-        if (r.imagenUri.isNotEmpty()) {
-            try {
-                recipeLargeImage.setImageURI(Uri.parse(r.imagenUri))
-            } catch (e: Exception) {
-                recipeLargeImage.setImageResource(R.mipmap.fondo)
-            }
-        }
     }
 
-    private fun observarViewModel() {
-        viewModel.recipeData.observe(this) { data ->
-            data?.let {
-                recipeTitleDetail.setText(it.nombreMedicamento)
-                recipeDescriptionDetail.setText(it.instrucciones)
-                doseText.setText(it.dosis)
-                freqText.setText(it.frecuencia)
-                durationText.setText(it.duracion)
-                qtyText.setText(it.cantidadTotal)
-                envaseText.setText(it.cantidadEnvase)
-                timesText.setText(it.vecesAlDia)
-                useMethodText.setText(it.metodoUso)
-                
-                btnConfirmarIA.isEnabled = true
-                btnConfirmarIA.alpha = 1.0f
-            }
-        }
-
-        viewModel.isLoading.observe(this) { isLoading ->
-            loadingIAOverlay.visibility = if (isLoading) View.VISIBLE else View.GONE
-        }
-
-        viewModel.saveStatus.observe(this) { (success, result) ->
-            if (success) {
-                Toast.makeText(this, "Receta guardada con éxito", Toast.LENGTH_SHORT).show()
-                // Actualizamos el objeto local con los datos actuales
-                currentReceta = Receta(
-                    id = result ?: currentReceta?.id ?: "",
-                    userId = auth.currentUser?.uid ?: "",
-                    nombreMedicamento = recipeTitleDetail.text.toString(),
-                    dosis = doseText.text.toString(),
-                    frecuencia = freqText.text.toString(),
-                    duracion = durationText.text.toString(),
-                    cantidadTotal = qtyText.text.toString(),
-                    cantidadEnvase = envaseText.text.toString(),
-                    vecesAlDia = timesText.text.toString(),
-                    instrucciones = recipeDescriptionDetail.text.toString(),
-                    metodoUso = useMethodText.text.toString(),
-                    imagenUri = currentImageUri,
-                    fechaCaptura = currentReceta?.fechaCaptura ?: System.currentTimeMillis()
-                )
-                btnEmpezarTratamiento.visibility = View.VISIBLE
-                btnEmpezarTratamiento.alpha = 1.0f
-                btnEliminarReceta.visibility = View.VISIBLE
-            } else {
-                Toast.makeText(this, "Error al guardar: $result", Toast.LENGTH_LONG).show()
-            }
-        }
-
-        recetasViewModel.deleteStatus.observe(this) { (success, message) ->
-            if (success) {
-                Toast.makeText(this, "Receta eliminada correctamente", Toast.LENGTH_SHORT).show()
-                finish() // Cierra la pantalla y vuelve a la lista
-            } else {
-                Toast.makeText(this, "Error al eliminar: $message", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        viewModel.error.observe(this) { error ->
-            error?.let { Toast.makeText(this, it, Toast.LENGTH_LONG).show() }
-        }
+    private fun analizarConIA(uri: Uri) {
+        val base64 = convertUriToBase64(uri)
+        if (base64 != null) viewModel.analizarReceta(base64, BuildConfig.OPENAI_API_KEY)
     }
 
     private fun convertUriToBase64(uri: Uri): String? {
         return try {
-            val inputStream: InputStream? = contentResolver.openInputStream(uri)
-            val bitmap = BitmapFactory.decodeStream(inputStream)
+            val type = contentResolver.getType(uri)
+            val isPdf = type == "application/pdf" || uri.toString().lowercase().endsWith(".pdf")
+            val bitmap = if (isPdf) {
+                renderPdfToBitmap(uri)
+            } else {
+                BitmapFactory.decodeStream(contentResolver.openInputStream(uri))
+            }
+            if (bitmap == null) return null
             val outputStream = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
-            val byteArray = outputStream.toByteArray()
-            Base64.encodeToString(byteArray, Base64.DEFAULT)
-        } catch (e: Exception) {
-            null
+            Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
+        } catch (e: Exception) { null }
+    }
+
+    private fun renderPdfToBitmap(uri: Uri): Bitmap? {
+        return try {
+            val file = File(cacheDir, "temp_pdf_receta.pdf")
+            contentResolver.openInputStream(uri)?.use { input -> FileOutputStream(file).use { input.copyTo(it) } }
+            val fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+            val renderer = PdfRenderer(fd)
+            val page = renderer.openPage(0)
+            val bitmap = Bitmap.createBitmap(page.width, page.height, Bitmap.Config.ARGB_8888)
+            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+            page.close()
+            renderer.close()
+            fd.close()
+            bitmap
+        } catch (e: Exception) { null }
+    }
+
+    private fun mostrarResultadosIA(data: RecipeResult) {
+        recipeTitleDetail.setText(data.nombreMedicamento)
+        recipeDescriptionDetail.setText(data.instrucciones)
+        doseText.setText(data.dosis)
+        freqText.setText(data.frecuencia)
+        durationText.setText(data.duracion)
+        qtyText.setText(data.cantidadTotal)
+        envaseText.setText(data.cantidadEnvase)
+        timesText.setText(data.vecesAlDia)
+        useMethodText.setText(data.metodoUso)
+        btnConfirmarIA.isEnabled = true
+        btnConfirmarIA.alpha = 1.0f
+    }
+
+    private fun mostrarErrorValidacion() {
+        val dialogView = layoutInflater.inflate(R.layout.layout_dialog_validation_error, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        dialogView.findViewById<View>(R.id.btnRescan).setOnClickListener {
+            dialog.dismiss()
+            finish()
+        }
+
+        dialogView.findViewById<View>(R.id.btnCancelError).setOnClickListener {
+            dialog.dismiss()
+            finish()
+        }
+
+        dialog.show()
+    }
+
+    private fun confirmarEliminacion() {
+        AlertDialog.Builder(this)
+            .setTitle("Eliminar Receta")
+            .setMessage("¿Deseas eliminar esta receta?")
+            .setPositiveButton("Eliminar") { _, _ -> 
+                currentReceta?.let { r -> viewModel.eliminarReceta(r.id) } 
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun toggleEditMode() {
+        isEditMode = !isEditMode
+        recipeTitleDetail.isEnabled = isEditMode
+        recipeDescriptionDetail.isEnabled = isEditMode
+        doseText.isEnabled = isEditMode
+        freqText.isEnabled = isEditMode
+        durationText.isEnabled = isEditMode
+        qtyText.isEnabled = isEditMode
+        envaseText.isEnabled = isEditMode
+        timesText.isEnabled = isEditMode
+        useMethodText.isEnabled = isEditMode
+        
+        if (!intent.getBooleanExtra("IS_NEW_RECIPE", true)) {
+            btnConfirmarIA.visibility = if (isEditMode) View.VISIBLE else View.GONE
+        }
+        
+        btnAgregarManualmente.text = if (isEditMode) "BLOQUEAR EDICIÓN" else "EDITAR INFORMACIÓN"
+    }
+
+    private fun observarViewModel() {
+        viewModel.recipeData.observe(this) { data -> 
+            data?.let { 
+                if (it.esRecetaValida) {
+                    mostrarResultadosIA(it)
+                } else {
+                    mostrarErrorValidacion()
+                }
+            } 
+        }
+        viewModel.isLoading.observe(this) { loading -> 
+            loadingIAOverlay.visibility = if (loading) View.VISIBLE else View.GONE 
+        }
+        viewModel.saveStatus.observe(this) { status ->
+            val (success, _) = status
+            if (success) { 
+                btnConfirmarIA.isEnabled = false
+                btnConfirmarIA.visibility = View.GONE
+                Toast.makeText(this, "Receta guardada con éxito", Toast.LENGTH_SHORT).show()
+                finish() 
+            } else {
+                btnConfirmarIA.isEnabled = true
+                btnConfirmarIA.alpha = 1.0f
+                Toast.makeText(this, "Error al guardar los cambios", Toast.LENGTH_SHORT).show()
+            }
+        }
+        viewModel.deleteStatus.observe(this) { status ->
+            val (success, _) = status
+            if (success) { finish() } 
         }
     }
 }

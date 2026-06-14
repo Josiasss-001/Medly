@@ -3,6 +3,7 @@ package com.example.medly_proyecto.ui.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medly_proyecto.R
@@ -17,6 +18,7 @@ class FarmaciaAdapter(
         val tvNombre: TextView = view.findViewById(R.id.tvNombre)
         val tvDireccion: TextView = view.findViewById(R.id.tvDireccion)
         val tvDistancia: TextView = view.findViewById(R.id.tvDistancia)
+        val ivTipoLugar: ImageView = view.findViewById(R.id.ivTipoLugar)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FarmaciaViewHolder {
@@ -29,6 +31,13 @@ class FarmaciaAdapter(
         holder.tvNombre.text = farmacia.nombre
         holder.tvDireccion.text = farmacia.direccion
         holder.tvDistancia.text = farmacia.distancia
+        
+        // Cambiar icono según el tipo
+        if (farmacia.tipo == "CESFAM") {
+            holder.ivTipoLugar.setImageResource(R.drawable.centrosalud)
+        } else {
+            holder.ivTipoLugar.setImageResource(R.drawable.farmacia)
+        }
         
         holder.itemView.setOnClickListener { onItemClick(farmacia) }
     }

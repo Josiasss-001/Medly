@@ -8,6 +8,7 @@ data class CitaMedica(
     val especialidad: String = "",
     val nombreMedico: String = "",
     val centroMedico: String = "",
+    val direccion: String = "", // Nueva dirección
     val fechaCita: Long = 0L, // Timestamp de la fecha
     val horaCita: String = "", // Ej: "10:30 AM"
     val motivoConsulta: String = "",

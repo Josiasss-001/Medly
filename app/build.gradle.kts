@@ -50,6 +50,10 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.androidx.exifinterface)
+
+    // WorkManager
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
 
     // Firebase
     implementation(platform(libs.firebase.bom))
@@ -59,7 +63,7 @@ dependencies {
     implementation(libs.firebase.storage)
 
     // Cloudinary
-    implementation(libs.cloudinary.android)
+    implementation("com.cloudinary:cloudinary-android:3.0.2")
 
     // Retrofit & Gson
     implementation(libs.retrofit)
@@ -85,6 +89,13 @@ dependencies {
     
     // Google Places
     implementation("com.google.android.libraries.places:places:4.1.0")
+
+    // CameraX
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.androidx.camera.extensions)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

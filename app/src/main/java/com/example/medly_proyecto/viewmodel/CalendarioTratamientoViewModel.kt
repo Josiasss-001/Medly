@@ -1,10 +1,12 @@
 package com.example.medly_proyecto.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import com.example.medly_proyecto.model.Receta
 import com.example.medly_proyecto.model.TomaMedicamento
+import com.example.medly_proyecto.notification.ReminderScheduler
 import com.example.medly_proyecto.repository.RecetasRepository
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
@@ -15,19 +17,42 @@ data class EventoTratamiento(
     val nombre: String = "",
     val hora: String = "",
     val completado: Boolean = false,
-    val idReceta: String = ""
+    val idReceta: String = "",
+    val dosis: String = ""
 )
 
-class CalendarioTratamientoViewModel : ViewModel() {
+data class MedicamentoGrupo(
+    val idReceta: String,
+    val nombreMedicamento: String,
+    val dosis: String,
+    val frecuencia: String,
+    val eventos: List<EventoTratamiento>,
+    var estaExpandido: Boolean = true
+)
+
+data class ResumenTratamiento(
+    val tomadas: Int = 0,
+    val pendientes: Int = 0,
+    val proximaDosis: String = "--",
+    val adherencia: Int = 0
+)
+
+class CalendarioTratamientoViewModel(application: Application) : AndroidViewModel(application) {
     private val repositorio = RecetasRepository()
     private val auth = FirebaseAuth.getInstance()
+    private val scheduler = ReminderScheduler(application)
     
+    private val _grupos = MutableLiveData<List<MedicamentoGrupo>>()
+    val grupos: LiveData<List<MedicamentoGrupo>> = _grupos
+
+    private val _resumen = MutableLiveData<ResumenTratamiento>()
+    val resumen: LiveData<ResumenTratamiento> = _resumen
+
     private val _eventos = MutableLiveData<List<EventoTratamiento>>()
     val eventos: LiveData<List<EventoTratamiento>> = _eventos
 
     private var todasLasRecetas: List<Receta> = emptyList()
     private var fechaActual: Calendar = Calendar.getInstance()
-    private var recetaIdEspecifica: String? = null
     private var estaCargando = false
 
     init {
@@ -39,14 +64,9 @@ class CalendarioTratamientoViewModel : ViewModel() {
         repositorio.getRecetasDesencriptadas(userId) { recetas ->
             if (recetas != null) {
                 todasLasRecetas = recetas
-                if (_eventos.value == null) cargarTomasDelDia()
+                cargarTomasDelDia()
             }
         }
-    }
-
-    fun setRecetaIdEspecifica(id: String?) {
-        recetaIdEspecifica = id
-        cargarTomasDelDia()
     }
 
     fun seleccionarFecha(anio: Int, mes: Int, dia: Int) {
@@ -69,52 +89,93 @@ class CalendarioTratamientoViewModel : ViewModel() {
         repositorio.getTomasPorFecha(userId, fechaString) { tomasExistentes ->
             val tomas = tomasExistentes ?: emptyList()
             
-            val recetasAProcesar = if (recetaIdEspecifica != null) {
-                todasLasRecetas.filter { it.id == recetaIdEspecifica }
-            } else {
-                todasLasRecetas
-            }
-
-            val idsRecetasConTomas = tomas.map { it.idReceta }.toSet()
-            
-            // SOLO buscamos recetas faltantes si es el día de HOY
+            // Usamos el id de la receta para identificar tomas únicas
+            val tomasExistentesIds = tomas.map { it.idReceta }.toSet()
             val esHoy = esMismoDia(fechaActual, Calendar.getInstance())
             
-            val recetasFaltantes = if (esHoy) {
-                recetasAProcesar.filter { receta ->
-                    applicaParaFecha(receta, fechaActual) && receta.id !in idsRecetasConTomas
+            val nuevasTomas = mutableListOf<TomaMedicamento>()
+            
+            if (esHoy) {
+                todasLasRecetas.forEach { receta ->
+                    if (receta.tratamientoIniciado && receta.id !in tomasExistentesIds && applicaParaFecha(receta, receta.fechaCaptura, fechaActual)) {
+                        nuevasTomas.addAll(generarTomasDeUnDia(receta, fechaString))
+                    }
                 }
-            } else {
-                emptyList()
             }
 
-            if (recetasFaltantes.isNotEmpty()) {
-                val nuevasTomas = mutableListOf<TomaMedicamento>()
-                recetasFaltantes.forEach { receta ->
-                    nuevasTomas.addAll(generarTomasDeUnDia(receta, fechaString))
-                }
-                
+            if (nuevasTomas.isNotEmpty()) {
                 repositorio.guardarTomasMasivas(nuevasTomas) { exito ->
                     estaCargando = false
-                    if (exito) cargarTomasDelDia()
+                    if (exito) {
+                        nuevasTomas.forEach { scheduler.programarAlarmasToma(it) }
+                        cargarTomasDelDia()
+                    }
                 }
             } else {
-                val eventosMapeados = tomas
-                    .filter { recetaIdEspecifica == null || it.idReceta == recetaIdEspecifica }
-                    .map { toma ->
-                        EventoTratamiento(
-                            id = toma.id,
-                            nombre = toma.nombreMedicamento,
-                            hora = toma.horaProgramada,
-                            completado = toma.estado == "TOMADA",
-                            idReceta = toma.idReceta
-                        )
-                    }.sortedBy { it.hora }
-                
-                _eventos.postValue(eventosMapeados)
+                agruparYActualizar(tomas)
                 estaCargando = false
             }
         }
+    }
+
+    private fun agruparYActualizar(tomas: List<TomaMedicamento>) {
+        val recetasMap = todasLasRecetas.associateBy { it.id }
+        
+        val gruposMapeados = tomas.groupBy { it.idReceta }.mapNotNull { (idReceta, listaTomas) ->
+            val receta = recetasMap[idReceta]
+            
+            val eventos = listaTomas.map { toma ->
+                EventoTratamiento(
+                    id = toma.id,
+                    nombre = toma.nombreMedicamento,
+                    hora = toma.horaProgramada,
+                    completado = toma.estado == "TOMADA",
+                    idReceta = toma.idReceta,
+                    dosis = toma.dosis
+                )
+            }.sortedBy { it.hora }
+            
+            MedicamentoGrupo(
+                idReceta = idReceta,
+                nombreMedicamento = receta?.nombreMedicamento ?: listaTomas.first().nombreMedicamento,
+                dosis = receta?.dosis ?: listaTomas.first().dosis,
+                frecuencia = receta?.frecuencia ?: "Cada cierto tiempo",
+                eventos = eventos
+            )
+        }
+
+        _grupos.postValue(gruposMapeados)
+        _eventos.postValue(gruposMapeados.flatMap { it.eventos })
+        actualizarResumen(tomas)
+    }
+
+    private fun actualizarResumen(tomas: List<TomaMedicamento>) {
+        if (tomas.isEmpty()) {
+            _resumen.postValue(ResumenTratamiento())
+            return
+        }
+
+        val tomadas = tomas.count { it.estado == "TOMADA" }
+        val pendientes = tomas.count { it.estado == "PENDIENTE" }
+        
+        val sdf = SimpleDateFormat("hh:mm a", Locale.US)
+        val ahora = Calendar.getInstance()
+        val proxima = tomas.filter { it.estado == "PENDIENTE" }
+            .mapNotNull { toma ->
+                try {
+                    val date = sdf.parse(toma.horaProgramada)
+                    val cal = Calendar.getInstance().apply { 
+                        time = date!!
+                        set(ahora.get(Calendar.YEAR), ahora.get(Calendar.MONTH), ahora.get(Calendar.DAY_OF_MONTH))
+                    }
+                    if (cal.after(ahora)) cal else null
+                } catch (e: Exception) { null }
+            }.minByOrNull { it.timeInMillis }
+
+        val proximaStr = proxima?.let { sdf.format(it.time) } ?: "--"
+        val adherencia = (tomadas * 100) / tomas.size
+
+        _resumen.postValue(ResumenTratamiento(tomadas, pendientes, proximaStr, adherencia))
     }
 
     private fun esMismoDia(cal1: Calendar, cal2: Calendar): Boolean {
@@ -122,9 +183,9 @@ class CalendarioTratamientoViewModel : ViewModel() {
                cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
     }
 
-    private fun applicaParaFecha(receta: Receta, cal: Calendar): Boolean {
+    private fun applicaParaFecha(receta: Receta, fechaInicioReceta: Long, cal: Calendar): Boolean {
         val inicio = Calendar.getInstance().apply { 
-            timeInMillis = receta.fechaCaptura
+            timeInMillis = fechaInicioReceta
             set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
         }
         val actual = cal.clone() as Calendar
@@ -186,16 +247,14 @@ class CalendarioTratamientoViewModel : ViewModel() {
         return tomas
     }
 
-    fun marcarToma(evento: EventoTratamiento, completado: Boolean) {
+    fun marcarToma(tomaId: String, completado: Boolean) {
         val nuevoEstado = if (completado) "TOMADA" else "PENDIENTE"
         val fechaCompletada = if (completado) System.currentTimeMillis() else null
         
-        repositorio.actualizarEstadoToma(evento.id, nuevoEstado, fechaCompletada) { exito ->
+        repositorio.actualizarEstadoToma(tomaId, nuevoEstado, fechaCompletada) { exito ->
             if (exito) {
-                val listaActual = _eventos.value?.map {
-                    if (it.id == evento.id) it.copy(completado = completado) else it
-                }
-                _eventos.postValue(listaActual)
+                if (completado) scheduler.cancelarAlarmasToma(tomaId)
+                cargarTomasDelDia()
             }
         }
     }

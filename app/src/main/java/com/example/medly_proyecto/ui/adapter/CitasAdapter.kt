@@ -1,5 +1,6 @@
 package com.example.medly_proyecto.ui.adapter
 
+import android.graphics.Color
 import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
@@ -33,6 +34,7 @@ class CitasAdapter(
 
     override fun onBindViewHolder(holder: CitaViewHolder, position: Int) {
         val cita = citas[position]
+        val context = holder.itemView.context
         holder.tvEspecialidad.text = cita.especialidad
         holder.tvMedico.text = if (cita.nombreMedico.isNotEmpty()) "Dr. ${cita.nombreMedico}" else "Médico por asignar"
         
@@ -40,15 +42,34 @@ class CitasAdapter(
         val fechaStr = sdf.format(Date(cita.fechaCita))
         holder.tvFechaHora.text = "$fechaStr - ${cita.horaCita}"
 
-        // Cargar fotografía si existe
         if (cita.imagenUri.isNotEmpty()) {
             try {
-                holder.ivFoto.setImageURI(Uri.parse(cita.imagenUri))
+                val uri = Uri.parse(cita.imagenUri)
+                val isPdf = cita.imagenUri.lowercase().contains(".pdf") || 
+                            context.contentResolver.getType(uri) == "application/pdf"
+
+                if (isPdf) {
+                    holder.ivFoto.setImageResource(R.drawable.imagenpdf)
+                    holder.ivFoto.scaleType = ImageView.ScaleType.FIT_CENTER
+                    holder.ivFoto.setPadding(25, 25, 25, 25)
+                    holder.ivFoto.setBackgroundColor(Color.parseColor("#E53935"))
+                } else {
+                    holder.ivFoto.setImageURI(uri)
+                    holder.ivFoto.scaleType = ImageView.ScaleType.CENTER_CROP
+                    holder.ivFoto.setPadding(0, 0, 0, 0)
+                    holder.ivFoto.setBackgroundColor(Color.TRANSPARENT)
+                }
             } catch (e: Exception) {
                 holder.ivFoto.setImageResource(R.mipmap.watch)
+                holder.ivFoto.scaleType = ImageView.ScaleType.CENTER_CROP
+                holder.ivFoto.setPadding(0, 0, 0, 0)
+                holder.ivFoto.setBackgroundColor(Color.TRANSPARENT)
             }
         } else {
             holder.ivFoto.setImageResource(R.mipmap.watch)
+            holder.ivFoto.scaleType = ImageView.ScaleType.CENTER_CROP
+            holder.ivFoto.setPadding(0, 0, 0, 0)
+            holder.ivFoto.setBackgroundColor(Color.TRANSPARENT)
         }
 
         val listener = View.OnClickListener { onVerDetallesClick(cita) }

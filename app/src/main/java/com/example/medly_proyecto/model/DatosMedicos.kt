@@ -9,5 +9,6 @@ data class DatosMedicos(
     val estatura: Int = 0,
     val sexo: String = "",
     val enfermedadCronica: Boolean = false,
-    val detalleEnfermedad: String = ""
+    val detalleEnfermedad: String = "",
+    val institucionSalud: String = ""
 )

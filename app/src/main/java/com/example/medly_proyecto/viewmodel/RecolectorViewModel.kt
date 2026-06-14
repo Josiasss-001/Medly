@@ -25,7 +25,8 @@ class RecolectorViewModel : ViewModel() {
         estatura: Int,
         fechaNacimiento: String,
         tieneEnfermedad: Boolean,
-        detalleEnfermedad: String
+        detalleEnfermedad: String,
+        institucionSalud: String
     ) {
         val usuario = Usuario(
             uid = userId,
@@ -45,17 +46,15 @@ class RecolectorViewModel : ViewModel() {
             estatura = estatura,
             sexo = sexo,
             enfermedadCronica = tieneEnfermedad,
-            detalleEnfermedad = if (tieneEnfermedad) detalleEnfermedad else ""
+            detalleEnfermedad = if (tieneEnfermedad) detalleEnfermedad else "",
+            institucionSalud = institucionSalud
         )
 
         usuarioRepo.actualizarPerfilCompleto(usuario, datosMedicos) { exito, error ->
-
             if (exito) {
-                _estadoGuardado.value =
-                    Pair(true, "¡Perfil completado con éxito!")
+                _estadoGuardado.value = Pair(true, "¡Perfil completado con éxito!")
             } else {
-                _estadoGuardado.value =
-                    Pair(false, error ?: "Hubo un error al guardar tus datos.")
+                _estadoGuardado.value = Pair(false, error ?: "Hubo un error al guardar tus datos.")
             }
         }
     }

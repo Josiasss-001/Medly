@@ -6,8 +6,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.cloudinary.android.MediaManager
 import com.example.medly_proyecto.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -23,16 +25,30 @@ class SplashActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_splash)
 
-        // Esperamos 3 segundos para que se vea la animación del corazón
+        inicializarCloudinary()
+
         Handler(Looper.getMainLooper()).postDelayed({
             checkSession()
         }, 3000)
     }
 
+    private fun inicializarCloudinary() {
+        try {
+            // Para la opción más segura (Subidas NO firmadas), solo necesitamos el cloud_name.
+            // Esto evita exponer el api_secret en el código de la aplicación.
+            val config = mutableMapOf<String, String>()
+            config["cloud_name"] = "dd9py23dp"
+            
+            MediaManager.init(this, config)
+            Log.d("CloudinaryInit", "Cloudinary configurado exitosamente para subidas no firmadas")
+        } catch (e: Exception) {
+            Log.w("CloudinaryInit", "Aviso: Cloudinary ya inicializado o error: ${e.message}")
+        }
+    }
+
     private fun checkSession() {
         val currentUser = auth.currentUser
         if (currentUser != null) {
-            // Si hay usuario, verificamos si completó su perfil
             db.collection("usuarios").document(currentUser.uid).get()
                 .addOnSuccessListener { document ->
                     if (document.exists()) {
@@ -47,7 +63,6 @@ class SplashActivity : AppCompatActivity() {
                     }
                 }
                 .addOnFailureListener {
-                    // En caso de error de red, intentamos ir al home si hay sesión
                     irAHome()
                 }
         } else {

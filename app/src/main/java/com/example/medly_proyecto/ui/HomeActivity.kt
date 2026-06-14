@@ -2,26 +2,28 @@ package com.example.medly_proyecto.ui
 
 import android.Manifest
 import android.app.ActivityOptions
-import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.provider.MediaStore
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Base64
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
@@ -30,39 +32,45 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.widget.CompositePageTransformer
+import androidx.viewpager2.widget.MarginPageTransformer
 import androidx.viewpager2.widget.ViewPager2
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.airbnb.lottie.LottieAnimationView
+import com.airbnb.lottie.LottieDrawable
+import com.example.medly_proyecto.BuildConfig
 import com.example.medly_proyecto.R
-import com.example.medly_proyecto.ui.adapter.SugerenciaAdapter
+import com.example.medly_proyecto.model.TipoAlerta
+import com.example.medly_proyecto.notification.NotificationSyncWorker
+import com.example.medly_proyecto.ui.adapter.AlertaAdapter
+import com.example.medly_proyecto.ui.adapter.BannerAdapter
 import com.example.medly_proyecto.ui.adapter.HomeCarouselAdapter
+import com.example.medly_proyecto.ui.adapter.NotificacionesAdapter
+import com.example.medly_proyecto.ui.adapter.SugerenciaAdapter
 import com.example.medly_proyecto.viewmodel.HomeViewModel
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
-import com.example.medly_proyecto.BuildConfig
-import com.google.android.material.appbar.AppBarLayout
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
 class HomeActivity : AppCompatActivity() {
 
-    // Vistas principales
     private lateinit var userNameTextView: TextView
-    private lateinit var motivationTextView: TextView
     private lateinit var profileCircle: ShapeableImageView
     private lateinit var drawerLayout: DrawerLayout
-    private lateinit var expandedOnlyContent: View
     
-    // Header del Navigation Drawer
     private lateinit var navHeaderName: TextView
     private lateinit var navHeaderEmail: TextView
     private lateinit var navHeaderProfileImg: ShapeableImageView
     private lateinit var navHeaderBackground: ImageView
 
-    // Componentes de búsqueda y contenido
     private lateinit var searchEditText: EditText
     private lateinit var tvQuick: TextView
-    private lateinit var quoteCard: View
     private lateinit var statsCard: View
     private lateinit var tvStats: View
     private lateinit var tvNoResults: TextView
@@ -70,28 +78,38 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var rvSuggestions: RecyclerView
     private lateinit var sugerenciaAdapter: SugerenciaAdapter
 
-    // Botones de servicios
-    private lateinit var btnCalendario: View
+    private lateinit var btnRecetas: View
+    private lateinit var btnCitas: View
+    private lateinit var btnTratamiento: View
     private lateinit var btnCredencial: View
-    private lateinit var btnTratamientos: View
-    private lateinit var btnVacio: View
 
-    // Salud e IMC
     private lateinit var tvPesoHome: TextView
+    private lateinit var tvAlturaHome: TextView
     private lateinit var tvIMCHome: TextView
     private lateinit var tvIMCEstadoHome: TextView
-    private lateinit var tvPresionHome: TextView
-    private lateinit var tvNotifCounter: TextView
+    private lateinit var tvEnfermedadHome: TextView
     
-    // Carousel logic
+    private lateinit var tvNotifCounter: TextView
+    private lateinit var btnNotificationBell: View
+    private lateinit var notifBadgeIndicator: View
+    private lateinit var lottieBell: LottieAnimationView
+    
+    private lateinit var rvAlertas: RecyclerView
+    private lateinit var alertaAdapter: AlertaAdapter
+    
+    private lateinit var vpBannerCarousel: ViewPager2
+    private lateinit var layoutDots: LinearLayout
     private lateinit var vpHomeCarousel: ViewPager2
     private lateinit var carouselAdapter: HomeCarouselAdapter
+    
     private val carouselHandler = Handler(Looper.getMainLooper())
-    private val carouselRunnable = Runnable {
-        if (::vpHomeCarousel.isInitialized) {
-            val currentItem = vpHomeCarousel.currentItem
-            val nextItem = if (currentItem == 0) 1 else 0
-            vpHomeCarousel.setCurrentItem(nextItem, true)
+    private val autoScrollRunnable = Runnable {
+        if (::vpBannerCarousel.isInitialized && vpBannerCarousel.adapter != null) {
+            val itemCount = vpBannerCarousel.adapter!!.itemCount
+            if (itemCount > 1) {
+                val nextItem = (vpBannerCarousel.currentItem + 1) % itemCount
+                vpBannerCarousel.setCurrentItem(nextItem, true)
+            }
             startAutoScroll()
         }
     }
@@ -101,22 +119,30 @@ class HomeActivity : AppCompatActivity() {
     private var imageUri: Uri? = null
     private var scanType: String = ""
 
-    // Launchers de permisos y cámara
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) openCamera() else Toast.makeText(this, "Permiso denegado", Toast.LENGTH_SHORT).show()
     }
 
+    private val requestNotificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (!isGranted) Toast.makeText(this, "No recibirás recordatorios", Toast.LENGTH_LONG).show()
+    }
+
     private val takePictureLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) {
-            val activityClass = if (scanType == "RECETA") RecetaDetalleActivity::class.java else CitaDetalleActivity::class.java
-            val key = if (scanType == "RECETA") "RECIPE_IMAGE_URI" else "APPOINTMENT_IMAGE_URI"
-            val isNewKey = if (scanType == "RECETA") "IS_NEW_RECIPE" else "IS_NEW_APPOINTMENT"
-            
-            val intent = Intent(this, activityClass).apply {
-                putExtra(key, imageUri.toString())
-                putExtra(isNewKey, true)
+            val uriStr = result.data?.getStringExtra("SCANNED_IMAGE_URI")
+            if (uriStr != null) {
+                procesarDocumentoSeleccionado(Uri.parse(uriStr))
             }
-            startActivity(intent)
+        }
+    }
+
+    private val pickDocumentLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let { 
+            try {
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                contentResolver.takePersistableUriPermission(it, takeFlags)
+            } catch (e: Exception) {}
+            procesarDocumentoSeleccionado(it) 
         }
     }
 
@@ -125,7 +151,6 @@ class HomeActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_home)
         
-        // 1. Inicializar Drawer y Navigation
         drawerLayout = findViewById(R.id.drawerLayout)
         val navigationView = findViewById<NavigationView>(R.id.navigationView)
         val headerView = navigationView.getHeaderView(0)
@@ -141,43 +166,48 @@ class HomeActivity : AppCompatActivity() {
             insets
         }
 
-        findViewById<View>(R.id.cardHamburger)?.setOnClickListener { drawerLayout.openDrawer(GravityCompat.START) }
+        findViewById<View>(R.id.navizquieda)?.setOnClickListener { 
+            drawerLayout.openDrawer(GravityCompat.START) 
+        }
 
-        // 2. Inicializar Vistas del Header Dinámico
         userNameTextView = findViewById(R.id.userNameTextView)
-        motivationTextView = findViewById(R.id.motivationTextView)
         profileCircle = findViewById(R.id.profileCircle)
-        expandedOnlyContent = findViewById(R.id.expandedOnlyContent)
-        
-        setupAppBarScroll()
 
-        // 3. Inicializar Contenido Principal
         searchEditText = findViewById(R.id.searchEditText)
         tvQuick = findViewById(R.id.tvQuick)
-        quoteCard = findViewById(R.id.quoteCard)
         statsCard = findViewById(R.id.statsCard)
         tvStats = findViewById(R.id.tvStats)
         tvNoResults = findViewById(R.id.tvNoResults)
         suggestionsCard = findViewById(R.id.suggestionsCard)
         rvSuggestions = findViewById(R.id.rvSuggestions)
 
-        btnCalendario = findViewById(R.id.btnCalendarioHome)
+        btnRecetas = findViewById(R.id.btnRecetasHome)
+        btnCitas = findViewById(R.id.btnCitasHome)
+        btnTratamiento = findViewById(R.id.btnTratamientoHome)
         btnCredencial = findViewById(R.id.btnCredencialHome)
-        btnTratamientos = findViewById(R.id.btnTratamientosHome)
-        btnVacio = findViewById(R.id.btnVacioHome)
 
         tvPesoHome = findViewById(R.id.tvPesoHome)
+        tvAlturaHome = findViewById(R.id.tvAlturaHome)
         tvIMCHome = findViewById(R.id.tvIMCHome)
         tvIMCEstadoHome = findViewById(R.id.tvIMCEstadoHome)
-        tvPresionHome = findViewById(R.id.tvPresionHome)
+        tvEnfermedadHome = findViewById(R.id.tvEnfermedadHome)
+        
         tvNotifCounter = findViewById(R.id.tvNotifCounter)
+        btnNotificationBell = findViewById(R.id.btnNotificationBell)
+        notifBadgeIndicator = findViewById(R.id.notifBadgeIndicator)
+        lottieBell = findViewById(R.id.lottieBell)
 
-        // 4. Configurar Componentes
+        configurarBannerCarousel()
         configurarCarousel()
         configurarRecyclerViewSugerencias()
+        configurarRecyclerViewAlertas()
         observarViewModel()
         
-        auth.currentUser?.uid?.let { viewModel.cargarDatos(it) }
+        auth.currentUser?.uid?.let { 
+            viewModel.cargarDatos(it)
+            iniciarSincronizacionNotificaciones()
+        }
+        
         navHeaderEmail.text = auth.currentUser?.email ?: ""
         viewModel.iniciarFrases(BuildConfig.OPENAI_API_KEY)
 
@@ -185,132 +215,85 @@ class HomeActivity : AppCompatActivity() {
         configurarDrawer(navigationView)
         configurarBusqueda()
         configurarListenersCategorias()
+        verificarPermisoNotificaciones()
+
+        btnNotificationBell.setOnClickListener { mostrarBottomSheetNotificaciones() }
 
         statsCard.setOnClickListener { irAActivity("EstadisticasActivity") }
         tvStats.setOnClickListener { irAActivity("EstadisticasActivity") }
         findViewById<View>(R.id.btnVerMasSalud).setOnClickListener { irAActivity("perfilActivity") }
         findViewById<View>(R.id.llNotifHeader).setOnClickListener { irAActivity("CalendarioTratamientoActivity") }
-        findViewById<View>(R.id.scanContainer).setOnClickListener { mostrarBottomSheetEscaneo() }
+        
+        findViewById<View>(R.id.contenedorEscaner).setOnClickListener { 
+            mostrarBottomSheetEscaneo()
+        }
     }
 
-    private fun setupAppBarScroll() {
-        val appBar = findViewById<AppBarLayout>(R.id.appBarLayout)
-        val density = resources.displayMetrics.density
-        val tvSubGreeting = findViewById<TextView>(R.id.tvSubGreeting)
-
-        appBar.addOnOffsetChangedListener(AppBarLayout.OnOffsetChangedListener { appBarLayout, verticalOffset ->
-            val totalScrollRange = appBarLayout.totalScrollRange
-            if (totalScrollRange == 0) return@OnOffsetChangedListener
-            val percentage = abs(verticalOffset).toFloat() / totalScrollRange.toFloat()
-
-            expandedOnlyContent.alpha = (1f - percentage / 0.6f).coerceIn(0f, 1f)
-            tvSubGreeting.alpha = (1f - percentage / 0.5f).coerceIn(0f, 1f)
-
-            // Animar Foto: Tamaño inicial 70dp -> 30dp. Posición inicial (24, 85) -> final (16, 12)
-            val initialSize = 70 * density
-            val finalSize = 30 * density
-            val scale = 1f - (percentage * (1f - (finalSize / initialSize)))
-            profileCircle.scaleX = scale
-            profileCircle.scaleY = scale
-            
-            profileCircle.translationX = (16 * density - 24 * density) * percentage
-            profileCircle.translationY = (12 * density - 85 * density) * percentage
-
-            // Animar Nombre: Pegado a la foto pequeña
-            val nameScale = 1f - (percentage * 0.15f)
-            userNameTextView.scaleX = nameScale
-            userNameTextView.scaleY = nameScale
-            
-            val nameTargetX = 58 * density // 16 (foto x) + 30 (foto width) + 12 (gap)
-            val nameInitialX = 110 * density // 24 + 70 + 16
-            userNameTextView.translationX = (nameTargetX - nameInitialX) * percentage
-            
-            val photoCenterY = 12 * density + (finalSize / 2f)
-            val nameTargetY = photoCenterY - (userNameTextView.height * nameScale / 2f)
-            userNameTextView.translationY = (nameTargetY - 85 * density) * percentage
-        })
-    }
-
-    private fun configurarCarousel() {
-        vpHomeCarousel = findViewById(R.id.vpHomeCarousel)
-        carouselAdapter = HomeCarouselAdapter(
-            onCitaClick = { irAActivity("HorasActivity") },
-            onMedClick = { irAActivity("CalendarioTratamientoActivity") }
-        )
-        vpHomeCarousel.adapter = carouselAdapter
-        startAutoScroll()
-    }
-
-    private fun startAutoScroll() {
-        carouselHandler.removeCallbacks(carouselRunnable)
-        carouselHandler.postDelayed(carouselRunnable, 6000)
-    }
-
-    override fun onResume() {
-        super.onResume()
-        startAutoScroll()
-        auth.currentUser?.uid?.let { viewModel.cargarDatos(it) } 
-    }
-
-    override fun onPause() {
-        super.onPause()
-        carouselHandler.removeCallbacks(carouselRunnable)
-    }
-
-    private fun mostrarBottomSheetEscaneo() {
-        val dialog = BottomSheetDialog(this)
-        val view = layoutInflater.inflate(R.layout.layout_bottom_sheet_scan, null)
-        view.findViewById<View>(R.id.btnScanReceta).setOnClickListener { scanType = "RECETA"; checkCameraPermission(); dialog.dismiss() }
-        view.findViewById<View>(R.id.btnScanHora).setOnClickListener { scanType = "HORA"; checkCameraPermission(); dialog.dismiss() }
-        dialog.setContentView(view)
-        dialog.show()
-    }
-
-    private fun checkCameraPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) openCamera()
-        else requestPermissionLauncher.launch(Manifest.permission.CAMERA)
-    }
-
-    private fun openCamera() {
-        val values = ContentValues().apply { put(MediaStore.Images.Media.TITLE, if (scanType == "RECETA") "Nueva Receta" else "Cita Médica") }
-        imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply { putExtra(MediaStore.EXTRA_OUTPUT, imageUri) }
-        takePictureLauncher.launch(intent)
-    }
-
-    private fun configurarListenersCategorias() {
-        btnCalendario.setOnClickListener { irAActivity("HorasActivity") }
-        btnCredencial.setOnClickListener { irAActivity("CredencialQRActivity") }
-        btnTratamientos.setOnClickListener { irAActivity("RecetasMedicasActivity") }
-        btnVacio.setOnClickListener { Toast.makeText(this, "Próximamente", Toast.LENGTH_SHORT).show() }
-    }
-
-    private fun configurarRecyclerViewSugerencias() {
-        sugerenciaAdapter = SugerenciaAdapter(emptyList()) { sugerencia ->
-            searchEditText.setText("") 
-            when (sugerencia.idModulo) {
-                1 -> irAActivity("RecetasMedicasActivity")
-                2 -> irAActivity("HorasActivity")
-                3 -> irAActivity("EstadisticasActivity")
+    private fun configurarRecyclerViewAlertas() {
+        rvAlertas = findViewById(R.id.rvAlertas)
+        alertaAdapter = AlertaAdapter { alerta ->
+            when (alerta.tipo) {
+                TipoAlerta.CITA -> {
+                    val cita = viewModel.getCitaById(alerta.dataId)
+                    if (cita != null) {
+                        val intent = Intent(this, CitaDetalleActivity::class.java)
+                        intent.putExtra("CITA_OBJ", cita)
+                        intent.putExtra("IS_NEW_APPOINTMENT", false)
+                        startActivity(intent)
+                    } else {
+                        irAActivityConFiltro("DocumentosActivity", "CITA")
+                    }
+                }
+                TipoAlerta.RECETA -> {
+                    val receta = viewModel.getRecetaById(alerta.dataId)
+                    if (receta != null) {
+                        val intent = Intent(this, RecetaDetalleActivity::class.java)
+                        intent.putExtra("RECETA_OBJ", receta)
+                        intent.putExtra("IS_NEW_RECIPE", false)
+                        startActivity(intent)
+                    } else {
+                        irAActivityConFiltro("DocumentosActivity", "RECETA")
+                    }
+                }
+                TipoAlerta.DOSIS -> irAActivity("CalendarioTratamientoActivity")
             }
         }
-        rvSuggestions.layoutManager = LinearLayoutManager(this)
-        rvSuggestions.adapter = sugerenciaAdapter
+        rvAlertas.layoutManager = LinearLayoutManager(this)
+        rvAlertas.adapter = alertaAdapter
     }
 
-    private fun configurarBusqueda() {
-        searchEditText.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { viewModel.filtrarContenido(s.toString()) }
-            override fun afterTextChanged(s: Editable?) {}
-        })
+    private fun iniciarSincronizacionNotificaciones() {
+        val syncRequest = PeriodicWorkRequestBuilder<NotificationSyncWorker>(1, TimeUnit.HOURS)
+            .build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "NotificationSync",
+            ExistingPeriodicWorkPolicy.KEEP,
+            syncRequest
+        )
+    }
+
+    private fun verificarPermisoNotificaciones() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) {
+                val intent = Intent().apply {
+                    action = android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
+                }
+                startActivity(intent)
+            }
+        }
     }
 
     private fun observarViewModel() {
         viewModel.usuario.observe(this) { usuario ->
             usuario?.let {
                 val nameToShow = it.nombres.ifEmpty { it.nombreCompleto.split(" ").firstOrNull() ?: "Usuario" }
-                userNameTextView.text = "Hi $nameToShow,"
+                userNameTextView.text = "Hola $nameToShow,"
                 navHeaderName.text = it.nombreCompleto
             }
         }
@@ -321,6 +304,7 @@ class HomeActivity : AppCompatActivity() {
                     val bitmap = base64ToBitmap(it.profileImageUrl)
                     profileCircle.setImageBitmap(bitmap)
                     navHeaderProfileImg.setImageBitmap(bitmap)
+                    findViewById<ImageView>(R.id.botonPerfilNav)?.setImageBitmap(bitmap)
                 }
                 if (it.backgroundImageUrl.isNotEmpty()) {
                     navHeaderBackground.setImageBitmap(base64ToBitmap(it.backgroundImageUrl))
@@ -328,7 +312,11 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
-        viewModel.fraseIA.observe(this) { motivationTextView.text = it }
+        viewModel.alertas.observe(this) { alertas ->
+            alertaAdapter.submitList(alertas)
+            findViewById<View>(R.id.llAlertasHeader).visibility = if (alertas.isNotEmpty()) View.VISIBLE else View.GONE
+            rvAlertas.visibility = if (alertas.isNotEmpty()) View.VISIBLE else View.GONE
+        }
 
         viewModel.estadoVisibilidad.observe(this) { estado ->
             val isVisible = if (estado.recetasVisible || estado.citasVisible) View.VISIBLE else View.GONE
@@ -336,11 +324,12 @@ class HomeActivity : AppCompatActivity() {
             tvQuick.visibility = isVisible
             statsCard.visibility = if (estado.statsVisible) View.VISIBLE else View.GONE
             tvStats.visibility = if (estado.statsVisible) View.VISIBLE else View.GONE
-            quoteCard.visibility = if (estado.quoteVisible) View.VISIBLE else View.GONE
-            tvNoResults.visibility = if (estado.sinResultadosVisible) View.VISIBLE else View.GONE
+            tvNoResults.visibility = if (estado.sinResultadosVisible) View.GONE else View.VISIBLE
             findViewById<View>(R.id.clHealthSummary).visibility = if (estado.statsVisible) View.VISIBLE else View.GONE
             findViewById<View>(R.id.llNotifHeader).visibility = isVisible
             vpHomeCarousel.visibility = isVisible
+            vpBannerCarousel.visibility = if (estado.sinResultadosVisible) View.GONE else View.VISIBLE
+            layoutDots.visibility = if (estado.sinResultadosVisible) View.GONE else View.VISIBLE
         }
         
         viewModel.sugerencias.observe(this) { lista ->
@@ -351,9 +340,17 @@ class HomeActivity : AppCompatActivity() {
         viewModel.datosMedicos.observe(this) { datos ->
             datos?.let {
                 tvPesoHome.text = String.format(Locale.getDefault(), "%.1f kg", it.peso)
+                tvAlturaHome.text = String.format(Locale.getDefault(), "%.2f m", it.estatura / 100.0)
+                
                 val (imc, estado) = viewModel.calcularIMC(it.peso, it.estatura)
                 tvIMCHome.text = String.format(Locale.getDefault(), "%.1f", imc)
                 tvIMCEstadoHome.text = estado
+                
+                tvEnfermedadHome.text = if (it.enfermedadCronica && it.detalleEnfermedad.isNotEmpty()) {
+                    it.detalleEnfermedad
+                } else {
+                    "Ninguna"
+                }
             }
         }
 
@@ -362,10 +359,221 @@ class HomeActivity : AppCompatActivity() {
             tvNotifCounter.visibility = if (conteo > 0) View.VISIBLE else View.GONE
         }
 
+        viewModel.tieneNotificacionesNuevas.observe(this) { nuevas ->
+            notifBadgeIndicator.visibility = if (nuevas) View.VISIBLE else View.GONE
+            if (nuevas) {
+                lottieBell.playAnimation()
+                lottieBell.repeatCount = LottieDrawable.INFINITE
+            } else {
+                lottieBell.pauseAnimation()
+                lottieBell.progress = 0f
+            }
+        }
+
         val updateCarousel = { carouselAdapter.updateData(viewModel.proximaCita.value, viewModel.proximaToma.value, viewModel.progresoMedicamentos.value) }
         viewModel.proximaToma.observe(this) { updateCarousel() }
         viewModel.proximaCita.observe(this) { updateCarousel() }
         viewModel.progresoMedicamentos.observe(this) { updateCarousel() }
+    }
+
+    private fun mostrarBottomSheetNotificaciones() {
+        val dialog = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.layout_bottom_sheet_notifications, null)
+        
+        val rvNotifs = view.findViewById<RecyclerView>(R.id.rvNotificationsHistory)
+        val tvEmpty = view.findViewById<TextView>(R.id.tvEmptyNotifs)
+        
+        val adapter = NotificacionesAdapter(emptyList())
+        rvNotifs.layoutManager = LinearLayoutManager(this)
+        rvNotifs.adapter = adapter
+        
+        viewModel.notificacionesHistorial.observe(this) { lista ->
+            adapter.updateLista(lista)
+            tvEmpty.visibility = if (lista.isEmpty()) View.VISIBLE else View.GONE
+        }
+        
+        auth.currentUser?.uid?.let { viewModel.marcarNotificacionesLeidas(it) }
+        
+        dialog.setContentView(view)
+        dialog.show()
+    }
+
+    private fun redireccionarSegunTipo(uriString: String) {
+        val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
+        val type = when (scanType) {
+            "RECETA" -> "RECETA"
+            "HORA" -> "CITA"
+            else -> "DOCUMENTO"
+        }
+        
+        val dest = when (type) {
+            "RECETA" -> RecetaDetalleActivity::class.java
+            "CITA" -> CitaDetalleActivity::class.java
+            else -> DocumentoDetalleActivity::class.java
+        }
+        
+        val intent = Intent(this, dest).apply {
+            putExtra("IS_NEW", true)
+            when (type) {
+                "RECETA" -> { putExtra("RECIPE_IMAGE_URI", uriString); putExtra("IS_NEW_RECIPE", true) }
+                "CITA" -> { putExtra("APPOINTMENT_IMAGE_URI", uriString); putExtra("IS_NEW_APPOINTMENT", true) }
+                else -> { putExtra("DOC_IMAGE_URI", uriString); putExtra("IS_NEW_DOC", true) }
+            }
+        }
+        startActivity(intent, options.toBundle())
+    }
+
+    private fun procesarDocumentoSeleccionado(uri: Uri) {
+        imageUri = uri
+        redireccionarSegunTipo(uri.toString())
+    }
+
+    private fun mostrarBottomSheetEscaneo() {
+        val dialog = BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.layout_bottom_sheet_scan, null)
+        
+        view.findViewById<View>(R.id.btnScanReceta).setOnClickListener { 
+            dialog.dismiss()
+            mostrarDialogoSeleccion("RECETA")
+        }
+        
+        view.findViewById<View>(R.id.btnScanHora).setOnClickListener { 
+            dialog.dismiss()
+            mostrarDialogoSeleccion("HORA")
+        }
+        
+        view.findViewById<View>(R.id.btnScanDocumento).setOnClickListener { 
+            dialog.dismiss()
+            scanType = "DOCUMENTO"
+            pickDocumentLauncher.launch(arrayOf("image/*", "application/pdf"))
+        }
+
+        dialog.setContentView(view)
+        dialog.show()
+    }
+
+    private fun mostrarDialogoSeleccion(tipo: String) {
+        scanType = tipo
+        val view = layoutInflater.inflate(R.layout.layout_dialog_source_choice, null)
+        val dialog = AlertDialog.Builder(this)
+            .setView(view)
+            .create()
+        
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        view.findViewById<TextView>(R.id.tvDialogTitle).text = "Subir $tipo"
+        
+        view.findViewById<View>(R.id.btnChoiceCamera).setOnClickListener {
+            dialog.dismiss()
+            checkCameraPermission()
+        }
+        
+        view.findViewById<View>(R.id.btnChoiceGallery).setOnClickListener {
+            dialog.dismiss()
+            pickDocumentLauncher.launch(arrayOf("image/*", "application/pdf"))
+        }
+
+        view.findViewById<View>(R.id.btnCancelChoice).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
+    private fun checkCameraPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) openCamera()
+        else requestPermissionLauncher.launch(Manifest.permission.CAMERA)
+    }
+
+    private fun openCamera() {
+        val intent = Intent(this, ScannerCameraActivity::class.java)
+        takePictureLauncher.launch(intent)
+    }
+
+    private fun configurarBannerCarousel() {
+        vpBannerCarousel = findViewById(R.id.vpBannerCarousel)
+        layoutDots = findViewById(R.id.layoutDots)
+        
+        val images = listOf(
+            R.drawable.caminar,
+            R.drawable.saludmental,
+            R.drawable.moverte,
+            R.drawable.tucuerpo
+        )
+        
+        vpBannerCarousel.adapter = BannerAdapter(images)
+        vpBannerCarousel.clipToPadding = false
+        vpBannerCarousel.clipChildren = false
+        vpBannerCarousel.offscreenPageLimit = 3
+        vpBannerCarousel.getChildAt(0).overScrollMode = RecyclerView.OVER_SCROLL_NEVER
+
+        val compositePageTransformer = CompositePageTransformer()
+        compositePageTransformer.addTransformer(MarginPageTransformer(20))
+        compositePageTransformer.addTransformer { page, position ->
+            val r = 1 - abs(position)
+            page.scaleX = 0.90f + r * 0.10f
+            page.scaleY = 0.90f + r * 0.10f
+            page.alpha = 0.5f + r * 0.5f
+        }
+        vpBannerCarousel.setPageTransformer(compositePageTransformer)
+        
+        setupDots(images.size)
+        
+        vpBannerCarousel.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                updateDots(position)
+                startAutoScroll()
+            }
+        })
+    }
+
+    private fun setupDots(size: Int) {
+        layoutDots.removeAllViews()
+        val dots = arrayOfNulls<ImageView>(size)
+        for (i in 0 until size) {
+            dots[i] = ImageView(this)
+            dots[i]?.setImageResource(R.drawable.dot_inactive)
+            val params = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            params.setMargins(8, 0, 8, 0)
+            layoutDots.addView(dots[i], params)
+        }
+        if (size > 0) updateDots(0)
+    }
+
+    private fun updateDots(position: Int) {
+        for (i in 0 until layoutDots.childCount) {
+            val dot = layoutDots.getChildAt(i) as ImageView
+            dot.setImageResource(if (i == position) R.drawable.dot_active else R.drawable.dot_inactive)
+        }
+    }
+
+    private fun configurarCarousel() {
+        vpHomeCarousel = findViewById(R.id.vpHomeCarousel)
+        carouselAdapter = HomeCarouselAdapter(
+            onCitaClick = { irAActivityConFiltro("DocumentosActivity", "CITA") },
+            onMedClick = { irAActivity("CalendarioTratamientoActivity") }
+        )
+        vpHomeCarousel.adapter = carouselAdapter
+    }
+
+    private fun startAutoScroll() {
+        carouselHandler.removeCallbacks(autoScrollRunnable)
+        carouselHandler.postDelayed(autoScrollRunnable, 5000)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        startAutoScroll()
+        auth.currentUser?.uid?.let { viewModel.cargarDatos(it) } 
+    }
+
+    override fun onPause() {
+        super.onPause()
+        carouselHandler.removeCallbacks(autoScrollRunnable)
     }
 
     private fun base64ToBitmap(base64Str: String): android.graphics.Bitmap? {
@@ -376,10 +584,11 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun configurarDrawer(navigationView: NavigationView) {
+        navigationView.setCheckedItem(R.id.nav_home)
         navigationView.setNavigationItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_recetas -> irAActivity("RecetasMedicasActivity")
-                R.id.nav_horas -> irAActivity("HorasActivity")
+                R.id.nav_recetas -> irAActivityConFiltro("DocumentosActivity", "RECETA")
+                R.id.nav_horas -> irAActivityConFiltro("DocumentosActivity", "CITA")
                 R.id.nav_mapas -> irAActivity("MapaActivity")
                 R.id.nav_perfil -> irAActivity("perfilActivity")
                 R.id.nav_logout -> cerrarSesion()
@@ -390,9 +599,12 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun configurarNavegacion() {
-        findViewById<View>(R.id.btnRecetasNav).setOnClickListener { irAActivity("RecetasMedicasActivity") }
-        findViewById<View>(R.id.btnMapasNav).setOnClickListener { irAActivity("MapaActivity") }
-        findViewById<View>(R.id.btnPerfilNav).setOnClickListener { irAActivity("perfilActivity") }
+        findViewById<View>(R.id.botonInicioNav).apply {
+            setOnClickListener { /* Página actual */ }
+        }
+        findViewById<View>(R.id.botonDocsNav).setOnClickListener { irAActivity("DocumentosActivity") }
+        findViewById<View>(R.id.botonMapasNav).setOnClickListener { irAActivity("MapaActivity") }
+        findViewById<View>(R.id.botonPerfilNav).setOnClickListener { irAActivity("perfilActivity") }
     }
 
     private fun cerrarSesion() {
@@ -406,5 +618,41 @@ class HomeActivity : AppCompatActivity() {
             val intent = Intent(this, Class.forName("com.example.medly_proyecto.ui.$className"))
             startActivity(intent, ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle())
         } catch (e: Exception) { Toast.makeText(this, "Pantalla en desarrollo", Toast.LENGTH_SHORT).show() }
+    }
+
+    private fun irAActivityConFiltro(className: String, filtro: String) {
+        try {
+            val intent = Intent(this, Class.forName("com.example.medly_proyecto.ui.$className"))
+            intent.putExtra("INITIAL_FILTER", filtro)
+            startActivity(intent, ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out).toBundle())
+        } catch (e: Exception) { Toast.makeText(this, "Pantalla en desarrollo", Toast.LENGTH_SHORT).show() }
+    }
+
+    private fun configurarListenersCategorias() {
+        btnRecetas.setOnClickListener { irAActivityConFiltro("DocumentosActivity", "RECETA") }
+        btnCitas.setOnClickListener { irAActivityConFiltro("DocumentosActivity", "CITA") }
+        btnTratamiento.setOnClickListener { irAActivity("CalendarioTratamientoActivity") }
+        btnCredencial.setOnClickListener { irAActivity("CredencialQRActivity") }
+    }
+
+    private fun configurarRecyclerViewSugerencias() {
+        sugerenciaAdapter = SugerenciaAdapter(emptyList()) { sugerencia ->
+            searchEditText.setText("") 
+            when (sugerencia.idModulo) {
+                1 -> irAActivityConFiltro("DocumentosActivity", "RECETA")
+                2 -> irAActivityConFiltro("DocumentosActivity", "CITA")
+                3 -> irAActivity("EstadisticasActivity")
+            }
+        }
+        rvSuggestions.layoutManager = LinearLayoutManager(this)
+        rvSuggestions.adapter = sugerenciaAdapter
+    }
+
+    private fun configurarBusqueda() {
+        searchEditText.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { viewModel.filtrarContenido(s.toString()) }
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        })
     }
 }

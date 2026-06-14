@@ -1,5 +1,7 @@
 package com.example.medly_proyecto.ui
 
+import android.app.ActivityOptions
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -92,12 +94,20 @@ class editPhotoActivity : AppCompatActivity() {
         }
 
         cancelPhotosButton.setOnClickListener {
-            finish()
+            regresarAPerfil()
         }
 
         backButton.setOnClickListener {
-            finish()
+            regresarAPerfil()
         }
+    }
+
+    private fun regresarAPerfil() {
+        val intent = Intent(this, perfilActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
+        startActivity(intent, options.toBundle())
+        finish()
     }
 
     private fun observarViewModel() {
@@ -110,8 +120,7 @@ class editPhotoActivity : AppCompatActivity() {
         viewModel.updateStatus.observe(this) { success ->
             if (success) {
                 Toast.makeText(this, "Fotos actualizadas con éxito", Toast.LENGTH_SHORT).show()
-                // Volver a la pantalla anterior
-                finish()
+                regresarAPerfil()
             } else {
                 Toast.makeText(this, "Error al actualizar las fotos", Toast.LENGTH_SHORT).show()
             }

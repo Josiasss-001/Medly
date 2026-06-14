@@ -8,6 +8,10 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -54,14 +58,27 @@
         <activity android:name=".ui.editPhotoActivity" android:exported="false" />
         <activity android:name=".ui.RecolectorActivity" android:exported="false" />
         <activity android:name=".ui.RecetasMedicasActivity" android:exported="false" />
-        <activity android:name=".ui.HorasActivity" android:exported="false" />
         <activity android:name=".ui.CitaDetalleActivity" android:exported="false" />
         <activity android:name=".ui.RecetaDetalleActivity" android:exported="false" />
+        <activity android:name=".ui.DocumentoDetalleActivity" android:exported="false" />
         <activity android:name=".ui.CalendarioTratamientoActivity" android:exported="false" />
+        <activity android:name=".ui.CalendarioCitasActivity" android:exported="false" />
         <activity android:name=".ui.CredencialQRActivity" android:exported="false" />
         <activity android:name=".ui.CambiarContrasenaActivity" android:exported="false" />
         <activity android:name=".ui.EstadisticasActivity" android:exported="false" />
         <activity android:name=".ui.MapaActivity" android:exported="false" />
+        <activity android:name=".ui.DocumentosActivity" android:exported="false" />
+        <activity android:name=".ui.ScannerCameraActivity" android:exported="false" />
+
+        <receiver android:name=".notification.ReminderReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.medly_proyecto.SHOW_DOSIS" />
+                <action android:name="com.example.medly_proyecto.SHOW_CITA" />
+                <action android:name="com.example.medly_proyecto.TAKEN" />
+                <action android:name="com.example.medly_proyecto.POSTPONE" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"

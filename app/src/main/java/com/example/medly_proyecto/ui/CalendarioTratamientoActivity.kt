@@ -2,9 +2,7 @@ package com.example.medly_proyecto.ui
 
 import android.graphics.Color
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
-import android.widget.GridLayout
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
@@ -16,28 +14,35 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.medly_proyecto.R
-import com.example.medly_proyecto.ui.adapter.EventosTratamientoAdapter
+import com.example.medly_proyecto.ui.adapter.CalendarioDiasAdapter
+import com.example.medly_proyecto.ui.adapter.DiaCalendario
+import com.example.medly_proyecto.ui.adapter.MedicamentoGrupoAdapter
 import com.example.medly_proyecto.viewmodel.CalendarioTratamientoViewModel
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import java.text.SimpleDateFormat
 import java.util.*
 
 class CalendarioTratamientoActivity : AppCompatActivity() {
 
     private val modeloVista: CalendarioTratamientoViewModel by viewModels()
-    private lateinit var gridCalendario: GridLayout
-    private lateinit var tvMesActual: TextView
-    private lateinit var rvEventos: RecyclerView
-    private lateinit var adaptador: EventosTratamientoAdapter
-    private lateinit var fabAgregar: FloatingActionButton
     
-    private lateinit var tvEtiquetaDia: TextView
-    private lateinit var tvNumeroDia: TextView
-    private lateinit var tvNombreDia: TextView
-    private lateinit var tvResumenEventos: TextView
+    private lateinit var tvMesActual: TextView
+    private lateinit var rvGrupos: RecyclerView
+    private lateinit var adaptadorGrupos: MedicamentoGrupoAdapter
+    
+    private lateinit var rvCalendarioHorizontal: RecyclerView
+    private lateinit var adaptadorDias: CalendarioDiasAdapter
+    
     private lateinit var btnAtras: ImageButton
 
-    private var calendario = Calendar.getInstance()
+    // Vistas del Resumen Superior
+    private lateinit var tvTomadasCount: TextView
+    private lateinit var tvPendientesCount: TextView
+    private lateinit var tvProximaHora: TextView
+    private lateinit var tvAdherenciaPorc: TextView
+    private lateinit var cpAdherencia: CircularProgressIndicator
+
+    private var calendarioBase = Calendar.getInstance()
     private var fechaSeleccionada = Calendar.getInstance()
     private val localeEs = Locale("es", "ES")
 
@@ -47,169 +52,113 @@ class CalendarioTratamientoActivity : AppCompatActivity() {
         setContentView(R.layout.activity_calendario_tratamiento)
 
         inicializarVistas()
+        configurarRecyclerViews()
         configurarEventos()
         observarModelo()
         
-        // Cargar receta específica si viene del intent
-        val recetaId = intent.getStringExtra("RECETA_ID")
-        if (recetaId != null) {
-            modeloVista.setRecetaIdEspecifica(recetaId)
-        }
-
-        actualizarCalendario()
-        actualizarInfoDiaSeleccionado(fechaSeleccionada)
+        actualizarMesYCalendario()
     }
 
     private fun inicializarVistas() {
-        gridCalendario = findViewById(R.id.gridCalendario)
         tvMesActual = findViewById(R.id.tvMesActual)
-        rvEventos = findViewById(R.id.rvEventosTratamiento)
-        fabAgregar = findViewById(R.id.fabAgregarTratamiento)
+        rvGrupos = findViewById(R.id.rvGruposMedicamentos)
+        rvCalendarioHorizontal = findViewById(R.id.rvCalendarioHorizontal)
         btnAtras = findViewById(R.id.btnAtras)
         
-        tvEtiquetaDia = findViewById(R.id.tvEtiquetaDia)
-        tvNumeroDia = findViewById(R.id.tvNumeroDia)
-        tvNombreDia = findViewById(R.id.tvNombreDia)
-        tvResumenEventos = findViewById(R.id.tvResumenEventos)
+        tvTomadasCount = findViewById(R.id.tvTomadasCount)
+        tvPendientesCount = findViewById(R.id.tvPendientesCount)
+        tvProximaHora = findViewById(R.id.tvProximaHora)
+        tvAdherenciaPorc = findViewById(R.id.tvAdherenciaPorc)
+        cpAdherencia = findViewById(R.id.cpAdherencia)
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.drawerLayout)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, 0, systemBars.right, 0)
+            v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom)
             insets
         }
     }
 
-    private fun configurarEventos() {
-        btnAtras.setOnClickListener {
-            finish()
+    private fun configurarRecyclerViews() {
+        // Lista de medicamentos
+        adaptadorGrupos = MedicamentoGrupoAdapter(emptyList()) { evento, estaMarcado ->
+            modeloVista.marcarToma(evento.id, estaMarcado)
         }
+        rvGrupos.layoutManager = LinearLayoutManager(this)
+        rvGrupos.adapter = adaptadorGrupos
+
+        // Calendario horizontal
+        adaptadorDias = CalendarioDiasAdapter(emptyList()) { nuevaFecha ->
+            fechaSeleccionada = nuevaFecha
+            actualizarFiltroFecha()
+            actualizarListaDias()
+        }
+        rvCalendarioHorizontal.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        rvCalendarioHorizontal.adapter = adaptadorDias
+    }
+
+    private fun configurarEventos() {
+        btnAtras.setOnClickListener { finish() }
 
         findViewById<ImageButton>(R.id.btnMesAnterior).setOnClickListener {
-            calendario.add(Calendar.MONTH, -1)
-            actualizarCalendario()
+            calendarioBase.add(Calendar.MONTH, -1)
+            actualizarMesYCalendario()
         }
 
         findViewById<ImageButton>(R.id.btnMesSiguiente).setOnClickListener {
-            calendario.add(Calendar.MONTH, 1)
-            actualizarCalendario()
+            calendarioBase.add(Calendar.MONTH, 1)
+            actualizarMesYCalendario()
         }
-
-        fabAgregar.setOnClickListener {
-            Toast.makeText(this, "Añadir tratamiento manual", Toast.LENGTH_SHORT).show()
-        }
-
-        // Inicializamos el adaptador con el callback para guardar en Firestore
-        adaptador = EventosTratamientoAdapter(emptyList()) { evento, estaMarcado ->
-            modeloVista.marcarToma(evento, estaMarcado)
-        }
-        rvEventos.layoutManager = LinearLayoutManager(this)
-        rvEventos.adapter = adaptador
     }
 
     private fun observarModelo() {
-        modeloVista.eventos.observe(this) { eventos ->
-            adaptador.updateEventos(eventos)
-            val cantidad = eventos.size
-            tvResumenEventos.text = when (cantidad) {
-                0 -> "No hay recordatorios para hoy"
-                1 -> "1 recordatorio programado"
-                else -> "$cantidad recordatorios programados"
-            }
+        modeloVista.grupos.observe(this) { grupos ->
+            adaptadorGrupos.updateGrupos(grupos)
+        }
+
+        modeloVista.resumen.observe(this) { resumen ->
+            tvTomadasCount.text = resumen.tomadas.toString()
+            tvPendientesCount.text = resumen.pendientes.toString()
+            tvProximaHora.text = resumen.proximaDosis
+            tvAdherenciaPorc.text = "${resumen.adherencia}%"
+            cpAdherencia.progress = resumen.adherencia
         }
     }
 
-    private fun actualizarCalendario() {
+    private fun actualizarMesYCalendario() {
         val formatoMes = SimpleDateFormat("MMMM yyyy", localeEs)
-        tvMesActual.text = formatoMes.format(calendario.time).replaceFirstChar { it.uppercase() }
+        tvMesActual.text = formatoMes.format(calendarioBase.time).replaceFirstChar { it.uppercase() }
+        actualizarListaDias()
+    }
 
-        gridCalendario.removeAllViews()
-
-        val tempCal = calendario.clone() as Calendar
-        tempCal.set(Calendar.DAY_OF_MONTH, 1)
+    private fun actualizarListaDias() {
+        val dias = mutableListOf<DiaCalendario>()
+        val tempCal = calendarioBase.clone() as Calendar
+        val maxDias = tempCal.getActualMaximum(Calendar.DAY_OF_MONTH)
         
-        var primerDiaSemana = tempCal.get(Calendar.DAY_OF_WEEK) - 2
-        if (primerDiaSemana < 0) primerDiaSemana = 6
-
-        val diasEnMes = tempCal.getActualMaximum(Calendar.DAY_OF_MONTH)
-
-        for (i in 0 until primerDiaSemana) {
-            gridCalendario.addView(crearEspacioVacio())
+        for (i in 1..maxDias) {
+            val diaCal = tempCal.clone() as Calendar
+            diaCal.set(Calendar.DAY_OF_MONTH, i)
+            dias.add(DiaCalendario(diaCal, esMismoDia(diaCal, fechaSeleccionada)))
         }
-
-        val hoy = Calendar.getInstance()
-        for (dia in 1..diasEnMes) {
-            val loopCal = tempCal.clone() as Calendar
-            loopCal.set(Calendar.DAY_OF_MONTH, dia)
-            
-            val esSeleccionado = esMismoDia(loopCal, fechaSeleccionada)
-            val esHoy = esMismoDia(loopCal, hoy)
-
-            val vistaDia = crearVistaDia(dia, esSeleccionado, esHoy) {
-                fechaSeleccionada = loopCal
-                actualizarInfoDiaSeleccionado(loopCal)
-                actualizarCalendario()
-            }
-            gridCalendario.addView(vistaDia)
-        }
-    }
-
-    private fun crearVistaDia(dia: Int, seleccionado: Boolean, esHoy: Boolean, alClick: () -> Unit): TextView {
-        return TextView(this).apply {
-            text = dia.toString()
-            gravity = Gravity.CENTER
-            textSize = 15f
-            layoutParams = GridLayout.LayoutParams().apply {
-                width = 0
-                height = dpToPx(44)
-                columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f)
-            }
-            
-            if (seleccionado) {
-                setBackgroundResource(R.drawable.calendar_day_selected)
-                setTextColor(Color.WHITE)
-            } else if (esHoy) {
-                setBackgroundResource(R.drawable.calendar_day_today)
-                setTextColor(Color.BLACK)
-            } else {
-                setTextColor(Color.parseColor("#475569"))
-                setBackgroundResource(0)
-            }
-            
-            setOnClickListener { alClick() }
-        }
-    }
-
-    private fun crearEspacioVacio(): View {
-        return View(this).apply {
-            layoutParams = GridLayout.LayoutParams().apply {
-                width = 0
-                height = dpToPx(44)
-                columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1, 1f)
-            }
-        }
-    }
-
-    private fun actualizarInfoDiaSeleccionado(cal: Calendar) {
-        val hoy = Calendar.getInstance()
-        tvEtiquetaDia.text = if (esMismoDia(cal, hoy)) "HOY" else "FECHA"
-        tvNumeroDia.text = cal.get(Calendar.DAY_OF_MONTH).toString()
         
-        val formatoNombreDia = SimpleDateFormat("EEEE", localeEs)
-        tvNombreDia.text = formatoNombreDia.format(cal.time).replaceFirstChar { it.uppercase() }
+        adaptadorDias.updateDias(dias)
+        
+        // Scroll automático al día seleccionado
+        if (fechaSeleccionada.get(Calendar.MONTH) == calendarioBase.get(Calendar.MONTH)) {
+            rvCalendarioHorizontal.scrollToPosition(fechaSeleccionada.get(Calendar.DAY_OF_MONTH) - 1)
+        }
+    }
 
+    private fun actualizarFiltroFecha() {
         modeloVista.seleccionarFecha(
-            cal.get(Calendar.YEAR),
-            cal.get(Calendar.MONTH),
-            cal.get(Calendar.DAY_OF_MONTH)
+            fechaSeleccionada.get(Calendar.YEAR),
+            fechaSeleccionada.get(Calendar.MONTH),
+            fechaSeleccionada.get(Calendar.DAY_OF_MONTH)
         )
     }
 
     private fun esMismoDia(cal1: Calendar, cal2: Calendar): Boolean {
         return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
                cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR)
-    }
-
-    private fun dpToPx(dp: Int): Int {
-        return (dp * resources.displayMetrics.density).toInt()
     }
 }

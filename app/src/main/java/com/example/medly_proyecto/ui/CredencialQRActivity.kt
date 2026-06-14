@@ -5,12 +5,16 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Base64
+import android.util.Log
+import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import com.example.medly_proyecto.R
 import com.example.medly_proyecto.viewmodel.PerfilViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -25,9 +29,11 @@ class CredencialQRActivity : AppCompatActivity() {
     private lateinit var tvCredencialNombre: TextView
     private lateinit var ivCredencialQR: ImageView
     private lateinit var btnCerrarCredencial: ImageButton
+    private lateinit var loadingOverlay: ConstraintLayout
 
     private val viewModel: PerfilViewModel by viewModels()
     private val auth = FirebaseAuth.getInstance()
+    private var generacionDisparada = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,17 +44,47 @@ class CredencialQRActivity : AppCompatActivity() {
         tvCredencialNombre = findViewById(R.id.tvCredencialNombre)
         ivCredencialQR = findViewById(R.id.ivCredencialQR)
         btnCerrarCredencial = findViewById(R.id.btnCerrarCredencial)
+        loadingOverlay = findViewById(R.id.loadingOverlay)
 
         btnCerrarCredencial.setOnClickListener {
-            finish()
+            if (loadingOverlay.visibility != View.VISIBLE) {
+                finish()
+            }
         }
 
         observarViewModel()
         
-        auth.currentUser?.uid?.let { uid ->
+        val uid = auth.currentUser?.uid
+        if (uid != null) {
             viewModel.loadProfile(uid)
-            generateQRCode(uid)
+            
+            val debeGenerar = intent.getBooleanExtra("GENERAR_NUEVA", false)
+            if (debeGenerar) {
+                Log.d("CredencialQR", "Esperando Usuario y Datos médicos de Firebase...")
+                
+                // Observamos ambos para asegurar que el PDF no salga vacío
+                viewModel.usuario.observe(this) { user ->
+                    val datos = viewModel.datosMedicos.value
+                    if (user != null && datos != null) {
+                        iniciarProceso()
+                    }
+                }
+                
+                viewModel.datosMedicos.observe(this) { datos ->
+                    val user = viewModel.usuario.value
+                    if (user != null && datos != null) {
+                        iniciarProceso()
+                    }
+                }
+            }
         }
+    }
+
+    private fun iniciarProceso() {
+        if (generacionDisparada) return
+        generacionDisparada = true
+        Log.d("CredencialQR", "Todo listo. Disparando generación de PDF y subida a Cloudinary.")
+        viewModel.generarYSubirCredencial(this)
     }
 
     private fun observarViewModel() {
@@ -63,6 +99,23 @@ class CredencialQRActivity : AppCompatActivity() {
                 if (it.profileImageUrl.isNotEmpty()) {
                     ivCredencialFoto.setImageBitmap(base64ToBitmap(it.profileImageUrl))
                 }
+            }
+        }
+
+        viewModel.credencialUrl.observe(this) { url ->
+            if (!url.isNullOrEmpty()) {
+                Log.d("CredencialQR", "Nueva URL recibida: $url. Actualizando QR...")
+                generateQRCode(url)
+            }
+        }
+
+        viewModel.isUploading.observe(this) { isUploading ->
+            if (isUploading) {
+                loadingOverlay.visibility = View.VISIBLE
+                btnCerrarCredencial.isEnabled = false
+            } else {
+                loadingOverlay.visibility = View.GONE
+                btnCerrarCredencial.isEnabled = true
             }
         }
     }
@@ -80,8 +133,9 @@ class CredencialQRActivity : AppCompatActivity() {
                 }
             }
             ivCredencialQR.setImageBitmap(bitmap)
+            Log.i("CredencialQR", "QR generado y mostrado con éxito.")
         } catch (e: WriterException) {
-            e.printStackTrace()
+            Log.e("CredencialQR", "Error al generar QR: ${e.message}")
         }
     }
 
@@ -91,6 +145,12 @@ class CredencialQRActivity : AppCompatActivity() {
             BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
         } catch (e: Exception) {
             null
+        }
+    }
+
+    override fun onBackPressed() {
+        if (loadingOverlay.visibility != View.VISIBLE) {
+            super.onBackPressed()
         }
     }
 }

@@ -16,5 +16,6 @@ data class Receta(
     val instrucciones: String = "",
     val metodoUso: String = "",
     val fechaCaptura: Long = System.currentTimeMillis(),
-    val imagenUri: String = ""
+    val imagenUri: String = "",
+    val tratamientoIniciado: Boolean = false
 ) : Serializable

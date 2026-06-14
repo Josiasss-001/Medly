@@ -66,7 +66,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvLogoCredencial" />
 
-            <!-- Foto de Perfil (Achicada para dar espacio) -->
+            <!-- Foto de Perfil -->
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/ivCredencialFoto"
                 android:layout_width="140dp"
@@ -82,7 +82,7 @@
                 app:strokeColor="@color/white"
                 app:strokeWidth="3dp" />
 
-            <!-- Nombre (Achicado) -->
+            <!-- Nombre -->
             <TextView
                 android:id="@+id/tvCredencialNombre"
                 android:layout_width="0dp"
@@ -142,7 +142,7 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
-                    <!-- QR GRANDE (Aumentado a 180dp) -->
+                    <!-- QR GRANDE -->
                     <ImageView
                         android:id="@+id/ivCredencialQR"
                         android:layout_width="180dp"
@@ -171,7 +171,7 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Botón Volver (Estilo moderno unificado) -->
+    <!-- Botón Volver -->
     <ImageButton
         android:id="@+id/btnCerrarCredencial"
         android:layout_width="40dp"
@@ -184,5 +184,41 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:tint="@color/white" />
+
+    <!-- Overlay de Carga -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/loadingOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#E6121212"
+        android:elevation="30dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/lottieLoading"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:lottie_autoPlay="true"
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/cargando" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Generando Credencial Digital..."
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lottieLoading" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

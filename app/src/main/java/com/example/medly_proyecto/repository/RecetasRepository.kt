@@ -13,6 +13,7 @@ class RecetasRepository {
         val recetaEncriptada = hashMapOf(
             "userId" to receta.userId,
             "nombreMedicamento" to SecurityUtils.encrypt(receta.nombreMedicamento),
+            "nombreMedico" to SecurityUtils.encrypt(receta.nombreMedico),
             "dosis" to SecurityUtils.encrypt(receta.dosis),
             "frecuencia" to SecurityUtils.encrypt(receta.frecuencia),
             "duracion" to SecurityUtils.encrypt(receta.duracion),
@@ -22,7 +23,8 @@ class RecetasRepository {
             "instrucciones" to SecurityUtils.encrypt(receta.instrucciones),
             "metodoUso" to SecurityUtils.encrypt(receta.metodoUso),
             "fechaCaptura" to receta.fechaCaptura,
-            "imagenUri" to receta.imagenUri
+            "imagenUri" to receta.imagenUri,
+            "tratamientoIniciado" to receta.tratamientoIniciado
         )
 
         if (receta.id.isNotEmpty()) {
@@ -46,6 +48,7 @@ class RecetasRepository {
                         id = doc.id,
                         userId = doc.getString("userId") ?: "",
                         nombreMedicamento = SecurityUtils.decrypt(doc.getString("nombreMedicamento") ?: ""),
+                        nombreMedico = SecurityUtils.decrypt(doc.getString("nombreMedico") ?: ""),
                         dosis = SecurityUtils.decrypt(doc.getString("dosis") ?: ""),
                         frecuencia = SecurityUtils.decrypt(doc.getString("frecuencia") ?: ""),
                         duracion = SecurityUtils.decrypt(doc.getString("duracion") ?: ""),
@@ -55,7 +58,8 @@ class RecetasRepository {
                         instrucciones = SecurityUtils.decrypt(doc.getString("instrucciones") ?: ""),
                         metodoUso = SecurityUtils.decrypt(doc.getString("metodoUso") ?: ""),
                         fechaCaptura = doc.getLong("fechaCaptura") ?: 0L,
-                        imagenUri = doc.getString("imagenUri") ?: ""
+                        imagenUri = doc.getString("imagenUri") ?: "",
+                        tratamientoIniciado = doc.getBoolean("tratamientoIniciado") ?: false
                     )
                 }
                 callback(lista)
@@ -73,8 +77,6 @@ class RecetasRepository {
                 callback(false, e.message)
             }
     }
-
-    // --- Tomas Programadas (Persistencia con IDs Determinísticos) ---
 
     fun guardarTomasMasivas(tomas: List<TomaMedicamento>, callback: (Boolean) -> Unit) {
         if (tomas.isEmpty()) { callback(true); return }
@@ -95,11 +97,9 @@ class RecetasRepository {
             .addOnFailureListener { callback(null) }
     }
 
-    fun getTodasLasTomas(userId: String, callback: (List<TomaMedicamento>?) -> Unit) {
-        db.collection("tomas_programadas")
-            .whereEqualTo("idUsuario", userId)
-            .get()
-            .addOnSuccessListener { callback(it.toObjects(TomaMedicamento::class.java)) }
+    fun getTomaById(tomaId: String, callback: (TomaMedicamento?) -> Unit) {
+        db.collection("tomas_programadas").document(tomaId).get()
+            .addOnSuccessListener { callback(it.toObject(TomaMedicamento::class.java)) }
             .addOnFailureListener { callback(null) }
     }
 

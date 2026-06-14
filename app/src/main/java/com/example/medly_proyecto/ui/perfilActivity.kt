@@ -4,18 +4,18 @@ import android.Manifest
 import android.app.ActivityOptions
 import android.app.DownloadManager
 import android.content.BroadcastReceiver
-import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
 import android.view.View
@@ -75,47 +75,57 @@ class perfilActivity : AppCompatActivity() {
     private var ultimoNombreArchivo: String? = null
 
     private var imageUri: Uri? = null
-    private var scanType: String = "" // "RECETA" o "HORA"
+    private var scanType: String = "" // "RECETA", "HORA" o "DOCUMENTO"
 
     private val requestNotificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
-        if (isGranted) {
-            generarInforme()
-        } else {
-            Toast.makeText(this, "Se necesita permiso de notificaciones para la descarga", Toast.LENGTH_SHORT).show()
-        }
+        if (isGranted) generarInforme() else Toast.makeText(this, "Se necesita permiso de notificaciones", Toast.LENGTH_SHORT).show()
     }
 
     private val requestCameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
-        if (isGranted) {
-            openCamera()
-        } else {
-            Toast.makeText(this, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
-        }
+        if (isGranted) openCamera() else Toast.makeText(this, "Permiso denegado", Toast.LENGTH_SHORT).show()
     }
 
     private val takePictureLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            when (scanType) {
-                "RECETA" -> {
-                    val intent = Intent(this, RecetaDetalleActivity::class.java).apply {
-                        putExtra("RECIPE_IMAGE_URI", imageUri.toString())
-                        putExtra("IS_NEW_RECIPE", true)
-                    }
-                    startActivity(intent)
+            imageUri?.let { redireccionarSegunTipo(it.toString()) }
+        }
+    }
+
+    private val pickDocumentLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let { redireccionarSegunTipo(it.toString()) }
+    }
+
+    private fun redireccionarSegunTipo(uriString: String) {
+        val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
+        when (scanType) {
+            "RECETA" -> {
+                val intent = Intent(this, RecetaDetalleActivity::class.java).apply {
+                    putExtra("RECIPE_IMAGE_URI", uriString)
+                    putExtra("IS_NEW_RECIPE", true)
                 }
-                "HORA" -> {
-                    val intent = Intent(this, CitaDetalleActivity::class.java).apply {
-                        putExtra("APPOINTMENT_IMAGE_URI", imageUri.toString())
-                        putExtra("IS_NEW_APPOINTMENT", true)
-                    }
-                    startActivity(intent)
+                startActivity(intent, options.toBundle())
+            }
+            "HORA" -> {
+                val intent = Intent(this, CitaDetalleActivity::class.java).apply {
+                    putExtra("APPOINTMENT_IMAGE_URI", uriString)
+                    putExtra("IS_NEW_APPOINTMENT", true)
                 }
+                startActivity(intent, options.toBundle())
+            }
+            "DOCUMENTO" -> {
+                val intent = Intent(this, DocumentoDetalleActivity::class.java).apply {
+                    putExtra("DOC_IMAGE_URI", uriString)
+                    putExtra("IS_NEW_DOC", true)
+                }
+                startActivity(intent, options.toBundle())
             }
         }
     }
@@ -135,7 +145,7 @@ class perfilActivity : AppCompatActivity() {
         navHeaderProfileImg = headerView.findViewById(R.id.nav_header_profile_img)
         navHeaderBackground = headerView.findViewById(R.id.nav_header_background)
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.drawerLayout)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(drawerLayout) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, 0, systemBars.right, 0)
             insets
@@ -158,7 +168,6 @@ class perfilActivity : AppCompatActivity() {
         deleteAccountText = findViewById(R.id.deleteAccountText)
 
         observarViewModel()
-        
         auth.currentUser?.uid?.let { viewModel.loadProfile(it) }
         val email = auth.currentUser?.email ?: ""
         userEmailText.text = email
@@ -172,38 +181,26 @@ class perfilActivity : AppCompatActivity() {
             val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
             startActivity(intent, options.toBundle())
         }
-
-        btnFotos.setOnClickListener {
-            irAActivity("editPhotoActivity")
-        }
-
+        btnFotos.setOnClickListener { irAActivity("editPhotoActivity") }
         btnCambiarPass.setOnClickListener {
             val intent = Intent(this, CambiarContrasenaActivity::class.java)
             val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
             startActivity(intent, options.toBundle())
         }
-
+        
         btnGenerarQR.setOnClickListener {
-            val intent = Intent(this, CredencialQRActivity::class.java)
+            val intent = Intent(this, CredencialQRActivity::class.java).apply {
+                putExtra("GENERAR_NUEVA", true)
+            }
             val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
             startActivity(intent, options.toBundle())
         }
+        
+        btnGenerarInforme.setOnClickListener { checkPermissionsAndGenerate() }
+        logoutButton.setOnClickListener { viewModel.signOut() }
+        deleteAccountText.setOnClickListener { mostrarDialogoEliminar() }
 
-        btnGenerarInforme.setOnClickListener {
-            checkPermissionsAndGenerate()
-        }
-
-        logoutButton.setOnClickListener {
-            viewModel.signOut()
-        }
-
-        deleteAccountText.setOnClickListener {
-            mostrarDialogoEliminar()
-        }
-
-        findViewById<LottieAnimationView>(R.id.lottieScan).setOnClickListener {
-            mostrarBottomSheetEscaneo()
-        }
+        findViewById<View>(R.id.contenedorEscaner).setOnClickListener { mostrarBottomSheetEscaneo() }
 
         try {
             val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
@@ -212,9 +209,7 @@ class perfilActivity : AppCompatActivity() {
             } else {
                 registerReceiver(onDownloadComplete, filter)
             }
-        } catch (e: Exception) {
-            Log.e("perfilActivity", "Error al registrar receiver: ${e.message}")
-        }
+        } catch (e: Exception) { Log.e("perfilActivity", "Error al registrar receiver: ${e.message}") }
     }
 
     private fun mostrarBottomSheetEscaneo() {
@@ -222,18 +217,41 @@ class perfilActivity : AppCompatActivity() {
         val view = layoutInflater.inflate(R.layout.layout_bottom_sheet_scan, null)
         
         view.findViewById<View>(R.id.btnScanReceta).setOnClickListener {
-            scanType = "RECETA"
-            checkCameraPermission()
             dialog.dismiss()
+            mostrarDialogoSeleccion("RECETA")
         }
         
         view.findViewById<View>(R.id.btnScanHora).setOnClickListener {
-            scanType = "HORA"
-            checkCameraPermission()
             dialog.dismiss()
+            mostrarDialogoSeleccion("HORA")
+        }
+
+        view.findViewById<View>(R.id.btnScanDocumento).setOnClickListener {
+            dialog.dismiss()
+            scanType = "DOCUMENTO"
+            pickDocumentLauncher.launch(arrayOf("image/*", "application/pdf"))
         }
         
         dialog.setContentView(view)
+        dialog.show()
+    }
+
+    private fun mostrarDialogoSeleccion(tipo: String) {
+        scanType = tipo
+        val view = layoutInflater.inflate(R.layout.layout_dialog_source_choice, null)
+        val dialog = AlertDialog.Builder(this).setView(view).create()
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        view.findViewById<TextView>(R.id.tvDialogTitle).text = "Subir $tipo"
+        view.findViewById<View>(R.id.btnChoiceCamera).setOnClickListener {
+            dialog.dismiss()
+            checkCameraPermission()
+        }
+        view.findViewById<View>(R.id.btnChoiceGallery).setOnClickListener {
+            dialog.dismiss()
+            pickDocumentLauncher.launch(arrayOf("image/*", "application/pdf"))
+        }
+        view.findViewById<View>(R.id.btnCancelChoice).setOnClickListener { dialog.dismiss() }
         dialog.show()
     }
 
@@ -246,61 +264,51 @@ class perfilActivity : AppCompatActivity() {
     }
 
     private fun openCamera() {
-        val title = if (scanType == "RECETA") "Nueva Receta" else "Cita Médica"
-        val values = ContentValues().apply {
-            put(MediaStore.Images.Media.TITLE, title)
-        }
-        imageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-            putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
-        }
+        val intent = Intent(this, ScannerCameraActivity::class.java)
         takePictureLauncher.launch(intent)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        try {
-            unregisterReceiver(onDownloadComplete)
-        } catch (e: Exception) { }
+        try { unregisterReceiver(onDownloadComplete) } catch (e: Exception) { }
     }
 
     private fun checkPermissionsAndGenerate() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            } else {
-                generarInforme()
-            }
-        } else {
-            generarInforme()
-        }
+            } else { generarInforme() }
+        } else { generarInforme() }
     }
 
     private fun generarInforme() {
         val usuario = viewModel.usuario.value
         val datos = viewModel.datosMedicos.value
-
         if (usuario == null || datos == null) {
             Toast.makeText(this, "Cargando datos médicos...", Toast.LENGTH_SHORT).show()
             return
         }
-
         Toast.makeText(this, "Generando informe...", Toast.LENGTH_LONG).show()
-
         try {
             val pdfFile = ReporteMedicoManager.generarReporteLocal(this, usuario, datos)
             lanzarIntentPdf(pdfFile)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Error al generar: ${e.message}", Toast.LENGTH_LONG).show()
-        }
+        } catch (e: Exception) { Toast.makeText(this, "Error al generar: ${e.message}", Toast.LENGTH_LONG).show() }
+    }
+
+    private fun lanzarIntentPdf(file: File) {
+        try {
+            val contentUri = FileProvider.getUriForFile(this, "${applicationContext.packageName}.fileprovider", file)
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.setDataAndType(contentUri, "application/pdf")
+            intent.flags = Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_GRANT_READ_URI_PERMISSION
+            startActivity(Intent.createChooser(intent, "Abrir Informe Médico con:"))
+        } catch (e: Exception) { Toast.makeText(this, "No se encontró un lector de PDF instalado", Toast.LENGTH_LONG).show() }
     }
 
     private val onDownloadComplete = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-            if (downloadId == id && id != -1L) {
-                abrirPdfDescargado()
-            }
+            if (downloadId == id && id != -1L) { abrirPdfDescargado() }
         }
     }
 
@@ -308,62 +316,46 @@ class perfilActivity : AppCompatActivity() {
         try {
             val downloadsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             val file = File(downloadsFolder, ultimoNombreArchivo ?: "")
-
-            if (file.exists()) {
-                lanzarIntentPdf(file)
-            } else {
+            if (file.exists()) { lanzarIntentPdf(file) } else {
                 val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
                 val query = DownloadManager.Query().setFilterById(downloadId)
                 val cursor = downloadManager.query(query)
-
                 if (cursor != null && cursor.moveToFirst()) {
                     val statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
                     if (statusIndex != -1 && DownloadManager.STATUS_SUCCESSFUL == cursor.getInt(statusIndex)) {
                         val localUriIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
                         val uriString = if (localUriIndex != -1) cursor.getString(localUriIndex) else null
                         cursor.close()
-                        
                         if (uriString != null) {
                             val uri = Uri.parse(uriString)
                             val backupFile = File(uri.path ?: "")
                             if (backupFile.exists()) lanzarIntentPdf(backupFile)
                             else Toast.makeText(this, "Archivo guardado en descargas", Toast.LENGTH_SHORT).show()
                         }
-                    } else {
-                        cursor.close()
-                    }
+                    } else { cursor.close() }
                 }
             }
-        } catch (e: Exception) {
-            Log.e("perfilActivity", "Error al abrir PDF: ${e.message}")
-        }
-    }
-
-    private fun lanzarIntentPdf(file: File) {
-        try {
-            val contentUri = FileProvider.getUriForFile(
-                this,
-                "${applicationContext.packageName}.fileprovider",
-                file
-            )
-
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.setDataAndType(contentUri, "application/pdf")
-            intent.flags = Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_GRANT_READ_URI_PERMISSION
-            
-            val chooser = Intent.createChooser(intent, "Abrir Informe Médico con:")
-            startActivity(chooser)
-        } catch (e: Exception) {
-            Toast.makeText(this, "No se encontró un lector de PDF instalado", Toast.LENGTH_LONG).show()
-        }
+        } catch (e: Exception) { Log.e("perfilActivity", "Error al abrir PDF: ${e.message}") }
     }
 
     private fun mostrarDialogoEliminar() {
         AlertDialog.Builder(this)
             .setTitle("Eliminar cuenta")
-            .setMessage("¿Estás seguro?")
+            .setMessage("¿Estás seguro de que deseas eliminar tu cuenta? Esta acción borrará permanentemente todos tus datos médicos, recetas, citas y perfil. No se puede deshacer.")
             .setPositiveButton("Eliminar") { _, _ ->
-                viewModel.eliminarCuenta { _, _ -> }
+                Toast.makeText(this, "Eliminando cuenta...", Toast.LENGTH_SHORT).show()
+                viewModel.eliminarCuenta { success, error ->
+                    if (success) {
+                        Toast.makeText(this, "Cuenta eliminada correctamente", Toast.LENGTH_SHORT).show()
+                        irAAuth()
+                    } else {
+                        if (error?.contains("recent", ignoreCase = true) == true) {
+                            Toast.makeText(this, "Por seguridad, debes haber iniciado sesión recientemente para eliminar tu cuenta. Por favor, cierra sesión e inicia de nuevo.", Toast.LENGTH_LONG).show()
+                        } else {
+                            Toast.makeText(this, "Error al eliminar cuenta: $error", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
             }
             .setNegativeButton("Cancelar", null)
             .show()
@@ -374,24 +366,26 @@ class perfilActivity : AppCompatActivity() {
             usuario?.let {
                 userNameText.text = it.nombreCompleto
                 navHeaderName.text = it.nombreCompleto
-                
                 val sdf = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("es", "CL"))
-                val dateStr = sdf.format(Date(it.fechaRegistro))
-                userRegistrationDateText.text = "Miembro desde: $dateStr"
+                userRegistrationDateText.text = "Miembro desde: ${sdf.format(Date(it.fechaRegistro))}"
             }
         }
-
         viewModel.perfilImagenes.observe(this) { imagenes ->
             imagenes?.let {
                 if (it.profileImageUrl.isNotEmpty()) {
-                    profileImage.setImageBitmap(base64ToBitmap(it.profileImageUrl))
+                    val bitmap = base64ToBitmap(it.profileImageUrl)
+                    profileImage.setImageBitmap(bitmap)
+                    navHeaderProfileImg.setImageBitmap(bitmap)
+                    // Cargar foto en la barra de navegación inferior
+                    findViewById<ImageView>(R.id.botonPerfilNav)?.setImageBitmap(bitmap)
                 }
                 if (it.backgroundImageUrl.isNotEmpty()) {
-                    headerBackground.setImageBitmap(base64ToBitmap(it.backgroundImageUrl))
+                    val bitmap = base64ToBitmap(it.backgroundImageUrl)
+                    headerBackground.setImageBitmap(bitmap)
+                    navHeaderBackground.setImageBitmap(bitmap)
                 }
             }
         }
-
         viewModel.loggedOut.observe(this) { success -> if (success) irAAuth() }
     }
 
@@ -411,11 +405,12 @@ class perfilActivity : AppCompatActivity() {
     }
 
     private fun configurarDrawer(navigationView: NavigationView) {
+        navigationView.setCheckedItem(R.id.nav_perfil)
         navigationView.setNavigationItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.nav_home -> irAActivity("HomeActivity")
-                R.id.nav_recetas -> irAActivity("RecetasMedicasActivity")
-                R.id.nav_horas -> irAActivity("HorasActivity")
+                R.id.nav_recetas -> irAActivityConFiltro("DocumentosActivity", "RECETA")
+                R.id.nav_horas -> irAActivityConFiltro("DocumentosActivity", "CITA")
                 R.id.nav_mapas -> irAActivity("MapaActivity")
                 R.id.nav_perfil -> drawerLayout.closeDrawer(GravityCompat.START)
                 R.id.nav_logout -> viewModel.signOut()
@@ -426,21 +421,10 @@ class perfilActivity : AppCompatActivity() {
     }
 
     private fun configurarNavegacion() {
-        findViewById<View>(R.id.btnHomeNav).setOnClickListener {
-            irAActivity("HomeActivity")
-        }
-        
-        findViewById<View>(R.id.btnRecetasNav).setOnClickListener {
-            irAActivity("RecetasMedicasActivity")
-        }
-        
-        findViewById<View>(R.id.btnMapasNav).setOnClickListener {
-            irAActivity("MapaActivity")
-        }
-        
-        findViewById<View>(R.id.btnPerfilNav).setOnClickListener {
-            // Ya estamos en Perfil
-        }
+        findViewById<View>(R.id.botonInicioNav).setOnClickListener { irAActivity("HomeActivity") }
+        findViewById<View>(R.id.botonDocsNav).setOnClickListener { irAActivity("DocumentosActivity") }
+        findViewById<View>(R.id.botonMapasNav).setOnClickListener { irAActivity("MapaActivity") }
+        findViewById<View>(R.id.botonPerfilNav).setOnClickListener { /* Ya estamos en Perfil */ }
     }
 
     private fun irAActivity(className: String) {
@@ -448,7 +432,16 @@ class perfilActivity : AppCompatActivity() {
             val intent = Intent(this, Class.forName("com.example.medly_proyecto.ui.$className"))
             val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
             startActivity(intent, options.toBundle())
-            finish()
+            if (className == "HomeActivity") finish()
+        } catch (e: Exception) { }
+    }
+
+    private fun irAActivityConFiltro(className: String, filtro: String) {
+        try {
+            val intent = Intent(this, Class.forName("com.example.medly_proyecto.ui.$className"))
+            intent.putExtra("INITIAL_FILTER", filtro)
+            val options = ActivityOptions.makeCustomAnimation(this, android.R.anim.fade_in, android.R.anim.fade_out)
+            startActivity(intent, options.toBundle())
         } catch (e: Exception) { }
     }
 }

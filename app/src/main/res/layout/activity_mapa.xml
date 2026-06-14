@@ -1,325 +1,308 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F1F5F9">
+    android:fitsSystemWindows="true"
+    tools:context=".ui.MapaActivity">
 
-    <!-- BOTÓN DE MENÚ HAMBURGUESA FLOTANTE -->
-    <ImageView
-        android:id="@+id/menuIcon"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="50dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Menú"
-        android:elevation="15dp"
-        android:padding="4dp"
-        android:src="@android:drawable/ic_menu_sort_by_size"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/Celeste" />
-
-    <!-- CONTENEDOR DEL MAPA Y VENTANA FLOTANTE -->
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:id="@+id/mapContainer"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_height="match_parent"
+        android:background="#F1F5F9">
 
-        <!-- MAPA -->
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/map"
-            android:name="com.google.android.gms.maps.SupportMapFragment"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:context=".ui.MapaActivity" />
+        <!-- BOTÓN DE MENÚ HAMBURGUESA FLOTANTE -->
+        <ImageView
+            android:id="@+id/menuIcon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="50dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Menú"
+            android:elevation="15dp"
+            android:padding="4dp"
+            android:src="@android:drawable/ic_menu_sort_by_size"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/Celeste" />
 
-        <!-- VENTANA FLOTANTE (Bottom Sheet) -->
+        <!-- SELECTOR DE TIPO DE LUGAR -->
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/bottomSheet"
-            android:layout_width="match_parent"
+            android:id="@+id/cardSelector"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
-            app:cardCornerRadius="28dp"
-            app:cardElevation="12dp"
-            app:strokeWidth="0dp"
-            app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
-            app:behavior_peekHeight="220dp">
+            android:layout_marginTop="50dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="15dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:strokeWidth="0dp">
 
-            <LinearLayout
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/toggleGroup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:checkedButton="@+id/btnSearchFarmacias"
+                app:selectionRequired="true"
+                app:singleSelection="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSearchFarmacias"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Farmacias"
+                    android:textAllCaps="false"
+                    android:textSize="12sp"
+                    app:cornerRadius="20dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSearchCesfam"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CESFAM"
+                    android:textAllCaps="false"
+                    android:textSize="12sp"
+                    app:cornerRadius="20dp" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- CONTENEDOR DEL MAPA Y VENTANA FLOTANTE -->
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:id="@+id/mapContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <!-- MAPA -->
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/map"
+                android:name="com.google.android.gms.maps.SupportMapFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:context=".ui.MapaActivity" />
+
+            <!-- VENTANA FLOTANTE (Bottom Sheet) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/bottomSheet"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp">
+                app:cardCornerRadius="28dp"
+                app:cardElevation="12dp"
+                app:strokeWidth="0dp"
+                app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+                app:behavior_peekHeight="260dp"
+                app:behavior_hideable="false"
+                app:behavior_fitToContents="true">
 
-                <!-- Indicador visual -->
-                <View
-                    android:layout_width="48dp"
-                    android:layout_height="5dp"
-                    android:layout_gravity="center"
-                    android:layout_marginBottom="16dp"
-                    android:background="#E2E8F0" />
-
-                <!-- Lista de Farmacias -->
                 <LinearLayout
-                    android:id="@+id/layoutList"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Farmacias cercanas"
-                        android:textColor="#0F172A"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
-
-                    <!-- Indicador de carga -->
-                    <ProgressBar
-                        android:id="@+id/pbSearching"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        android:layout_gravity="center"
-                        android:layout_marginVertical="10dp"
-                        android:visibility="gone" />
-
-                    <!-- Mensaje de estado -->
-                    <TextView
-                        android:id="@+id/tvNoResultsMapa"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Buscando farmacias reales..."
-                        android:textAlignment="center"
-                        android:textColor="#64748B"
-                        android:textSize="13sp"
-                        android:layout_marginTop="8dp"
-                        android:visibility="gone" />
-
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/rvFarmacias"
-                        android:layout_width="match_parent"
-                        android:layout_height="300dp"
-                        android:layout_marginTop="12dp" />
-                </LinearLayout>
-
-                <!-- Detalle de la Farmacia -->
-                <LinearLayout
-                    android:id="@+id/layoutDetail"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:visibility="gone">
+                    android:paddingTop="20dp"
+                    android:paddingHorizontal="24dp"
+                    android:paddingBottom="120dp"> <!-- Elevado para que el botón suba sobre la nav bar -->
 
-                    <androidx.constraintlayout.widget.ConstraintLayout
+                    <!-- Indicador visual -->
+                    <View
+                        android:layout_width="48dp"
+                        android:layout_height="5dp"
+                        android:layout_gravity="center"
+                        android:layout_marginBottom="16dp"
+                        android:background="#E2E8F0" />
+
+                    <!-- Contenedor dinámico -->
+                    <FrameLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
-                        <TextView
-                            android:id="@+id/tvFarmaciaNombre"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:text="Nombre Farmacia"
-                            android:textColor="#0F172A"
-                            android:textSize="22sp"
-                            android:textStyle="bold"
-                            app:layout_constraintEnd_toStartOf="@+id/btnBack"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent" />
-
-                        <ImageButton
-                            android:id="@+id/btnBack"
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:contentDescription="Cerrar detalle"
-                            android:src="@android:drawable/ic_menu_close_clear_cancel"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="parent"
-                            app:tint="#64748B" />
-
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-
-                    <ProgressBar
-                        style="@android:style/Widget.ProgressBar.Horizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="6dp"
-                        android:layout_marginTop="12dp"
-                        android:progress="100"
-                        android:progressTint="@color/Celeste" />
-
-                    <GridLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
-                        android:columnCount="2">
-
+                        <!-- LISTA DE LUGARES -->
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:id="@+id/layoutList"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
                             android:orientation="vertical">
+
                             <TextView
+                                android:id="@+id/tvTituloLista"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Distancia real"
-                                android:textColor="#64748B"
-                                android:textSize="12sp" />
-                            <TextView
-                                android:id="@+id/tvDistancia"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="-- km"
+                                android:text="Farmacias cercanas"
                                 android:textColor="#0F172A"
                                 android:textSize="18sp"
                                 android:textStyle="bold" />
-                        </LinearLayout>
 
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:orientation="vertical">
+                            <ProgressBar
+                                android:id="@+id/pbSearching"
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:layout_gravity="center"
+                                android:layout_marginVertical="8dp"
+                                android:visibility="gone" />
+
                             <TextView
-                                android:layout_width="wrap_content"
+                                android:id="@+id/tvNoResultsMapa"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Tiempo estimado"
+                                android:textAlignment="center"
                                 android:textColor="#64748B"
-                                android:textSize="12sp" />
-                            <TextView
-                                android:id="@+id/tvTiempo"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="-- min"
-                                android:textColor="#0F172A"
-                                android:textSize="18sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </GridLayout>
+                                android:textSize="13sp"
+                                android:layout_marginTop="4dp"
+                                android:visibility="gone" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnComenzar"
-                        android:layout_width="match_parent"
-                        android:layout_height="60dp"
-                        android:layout_marginTop="32dp"
-                        android:text="Comenzar Navegación"
-                        android:backgroundTint="@color/Celeste"
-                        android:textAllCaps="false"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        app:cornerRadius="18dp" />
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvFarmacias"
+                                android:layout_width="match_parent"
+                                android:layout_height="320dp"
+                                android:layout_marginTop="8dp" />
+                        </LinearLayout>
+
+                        <!-- DETALLE DE LA FARMACIA -->
+                        <LinearLayout
+                            android:id="@+id/layoutDetail"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone">
+
+                            <androidx.core.widget.NestedScrollView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+
+                                <LinearLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical">
+
+                                    <androidx.constraintlayout.widget.ConstraintLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content">
+
+                                        <TextView
+                                            android:id="@+id/tvFarmaciaNombre"
+                                            android:layout_width="0dp"
+                                            android:layout_height="wrap_content"
+                                            android:text="Nombre Farmacia"
+                                            android:textColor="#0F172A"
+                                            android:textSize="20sp"
+                                            android:textStyle="bold"
+                                            app:layout_constraintEnd_toStartOf="@+id/btnBackDetail"
+                                            app:layout_constraintStart_toStartOf="parent"
+                                            app:layout_constraintTop_toTopOf="parent" />
+
+                                        <ImageButton
+                                            android:id="@+id/btnBackDetail"
+                                            android:layout_width="36dp"
+                                            android:layout_height="36dp"
+                                            android:background="?attr/selectableItemBackgroundBorderless"
+                                            android:contentDescription="Cerrar detalle"
+                                            android:src="@android:drawable/ic_menu_close_clear_cancel"
+                                            app:layout_constraintEnd_toEndOf="parent"
+                                            app:layout_constraintTop_toTopOf="parent"
+                                            app:tint="#64748B" />
+
+                                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                                    <ProgressBar
+                                        style="@android:style/Widget.ProgressBar.Horizontal"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="4dp"
+                                        android:layout_marginTop="8dp"
+                                        android:progress="100"
+                                        android:progressTint="@color/Celeste" />
+
+                                    <!-- Restaurado: Diseño original de 2 columnas -->
+                                    <GridLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="20dp"
+                                        android:columnCount="2">
+
+                                        <LinearLayout
+                                            android:layout_width="0dp"
+                                            android:layout_height="wrap_content"
+                                            android:layout_columnWeight="1"
+                                            android:orientation="vertical">
+                                            <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="Distancia real"
+                                                android:textColor="#64748B"
+                                                android:textSize="12sp" />
+                                            <TextView
+                                                android:id="@+id/tvDistancia"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="-- km"
+                                                android:textColor="#0F172A"
+                                                android:textSize="18sp"
+                                                android:textStyle="bold" />
+                                        </LinearLayout>
+
+                                        <LinearLayout
+                                            android:layout_width="0dp"
+                                            android:layout_height="wrap_content"
+                                            android:layout_columnWeight="1"
+                                            android:orientation="vertical">
+                                            <TextView
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="Tiempo estimado"
+                                                android:textColor="#64748B"
+                                                android:textSize="12sp" />
+                                            <TextView
+                                                android:id="@+id/tvTiempo"
+                                                android:layout_width="wrap_content"
+                                                android:layout_height="wrap_content"
+                                                android:text="-- min"
+                                                android:textColor="#0F172A"
+                                                android:textSize="18sp"
+                                                android:textStyle="bold" />
+                                        </LinearLayout>
+                                    </GridLayout>
+
+                                    <com.google.android.material.button.MaterialButton
+                                        android:id="@+id/btnComenzar"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="56dp"
+                                        android:layout_marginTop="24dp"
+                                        android:text="Comenzar Navegación"
+                                        android:backgroundTint="@color/Celeste"
+                                        android:textAllCaps="false"
+                                        android:textSize="15sp"
+                                        android:textStyle="bold"
+                                        app:cornerRadius="16dp" />
+                                </LinearLayout>
+                            </androidx.core.widget.NestedScrollView>
+                        </LinearLayout>
+                    </FrameLayout>
                 </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
-    <!-- NUEVA BARRA DE NAVEGACIÓN PERSONALIZADA -->
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/bottomNavCard"
-        android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginBottom="55dp"
-        app:cardBackgroundColor="@color/white"
-        app:cardCornerRadius="35dp"
-        app:cardElevation="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:strokeWidth="0dp"
-        tools:layout_editor_absoluteX="16dp">
-
-        <LinearLayout
+        <!-- BARRA DE NAVEGACIÓN REUTILIZABLE -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:weightSum="5">
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent">
+            <include layout="@layout/layout_navegacion_personalizada" />
+        </FrameLayout>
 
-            <ImageView
-                android:id="@+id/btnHomeNav"
-                android:layout_width="0dp"
-                android:layout_height="32dp"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:contentDescription="Inicio"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackgroundBorderless"
-                android:padding="2dp"
-                android:src="@drawable/house" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <ImageView
-                android:id="@+id/btnRecetasNav"
-                android:layout_width="0dp"
-                android:layout_height="32dp"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:contentDescription="Recetas"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackgroundBorderless"
-                android:padding="2dp"
-                android:src="@drawable/archivo" />
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navigationView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@color/white"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/drawer_menu" />
 
-            <View
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1" />
-
-            <ImageView
-                android:id="@+id/btnMapasNav"
-                android:layout_width="0dp"
-                android:layout_height="32dp"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:contentDescription="Mapas"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackgroundBorderless"
-                android:padding="2dp"
-                android:src="@drawable/maps" />
-
-            <ImageView
-                android:id="@+id/btnPerfilNav"
-                android:layout_width="0dp"
-                android:layout_height="32dp"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:contentDescription="Perfil"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackgroundBorderless"
-                android:padding="2dp"
-                android:src="@drawable/monito" />
-
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/scanContainer"
-        android:layout_width="75dp"
-        android:layout_height="75dp"
-        android:layout_marginBottom="55dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackgroundBorderless"
-        app:cardBackgroundColor="@color/Celeste"
-        app:cardCornerRadius="37.5dp"
-        app:cardElevation="15dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:strokeColor="@color/white"
-        app:strokeWidth="4dp">
-
-        <com.airbnb.lottie.LottieAnimationView
-            android:id="@+id/lottieScan"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:clickable="false"
-            android:padding="15dp"
-            app:lottie_autoPlay="true"
-            app:lottie_loop="true"
-            app:lottie_rawRes="@raw/qr" />
-    </com.google.android.material.card.MaterialCardView>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.drawerlayout.widget.DrawerLayout>
